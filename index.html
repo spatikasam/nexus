@@ -7,103 +7,65 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    
+    <!-- PYODIDE for LIVE ML -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+    
+    <!-- FIREBASE - REPLACE CONFIG BELOW -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-storage-compat.js"></script>
+
     <style>
+        * { box-sizing: border-box; }
         body { 
             font-family: 'Inter', sans-serif; 
             background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
-            color: white; 
-            margin: 0; 
-            padding: 20px; 
-            min-height: 100vh;
-            font-weight: 300;
-            letter-spacing: -0.01em;
+            color: white; margin: 0; padding: 20px; min-height: 100vh;
+            font-weight: 300; letter-spacing: -0.01em; overflow-x: hidden;
         }
+        .header { text-align: center; margin-bottom: 40px; }
         .header h1 { 
-            font-size: 3.5em; 
-            margin: 0; 
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent;
-            font-weight: 200;
-            letter-spacing: -0.03em;
+            font-size: clamp(2.5em, 8vw, 4em); margin: 0; 
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4); 
+            background-size: 300% 300%; -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; font-weight: 200; letter-spacing: -0.03em;
+            animation: gradientShift 4s ease infinite; filter: drop-shadow(0 0 20px rgba(255,107,107,0.3));
         }
-        .header p {
-            font-size: 1.3em;
-            opacity: 0.9;
-            margin-top: 10px;
-            font-weight: 300;
-            letter-spacing: -0.01em;
-        }
-        .upload-area { 
-            border: 2px dashed #666; 
-            padding: 40px; 
-            text-align: center; 
-            margin: 20px 0; 
-            border-radius: 15px;
-            background: rgba(255,255,255,0.05);
-            font-weight: 400;
-        }
-        .upload-area label {
-            font-size: 1.4em;
-            font-weight: 500;
-        }
-        .controls { display: flex; gap: 15px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
-        select, button { 
-            padding: 12px 24px; 
-            border: none; 
-            border-radius: 25px; 
-            font-size: 16px; 
-            font-family: 'Inter', sans-serif;
-            font-weight: 500;
-        }
-        button { 
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4); 
-            cursor: pointer; 
-            color: white; 
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(255,107,107,0.3);
-        }
-        button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,107,107,0.4); }
-        #preview { margin: 20px 0; text-align: center; }
-        #gallery { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); 
-            gap: 10px; 
-            margin-top: 30px;
-        }
-        .thumb { 
-            width: 100px; height: 100px; 
-            object-fit: cover; 
-            border-radius: 12px; 
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid rgba(255,255,255,0.1);
-        }
-        .thumb:hover { 
-            transform: scale(1.08) rotate(2deg); 
-            border-color: rgba(255,255,255,0.4);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
-        }
-        .stats { 
-            text-align: center; 
-            margin: 20px 0; 
-            font-size: 1.2em; 
-            font-weight: 500;
-            background: rgba(255,255,255,0.05);
-            padding: 15px;
-            border-radius: 10px;
-        }
+        @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        .header p { font-size: 1.3em; opacity: 0.9; margin-top: 10px; font-weight: 300; max-width: 600px; margin-left: auto; margin-right: auto; }
+        .upload-area { border: 2px dashed #666; padding: 40px; text-align: center; margin: 20px auto; border-radius: 20px; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); max-width: 500px; font-weight: 400; transition: all 0.3s ease; }
+        .upload-area:hover { border-color: #4ecdc4; box-shadow: 0 10px 40px rgba(78,205,196,0.2); }
+        .upload-area label { font-size: 1.4em; font-weight: 500; cursor: pointer; display: block; margin-bottom: 20px; }
+        .controls { display: flex; gap: 15px; justify-content: center; margin: 30px 0; flex-wrap: wrap; }
+        select, button { padding: 14px 28px; border: none; border-radius: 30px; font-size: 16px; font-family: 'Inter', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.3s ease; }
+        select { background: rgba(255,255,255,0.1); color: white; border: 2px solid rgba(255,255,255,0.2); }
+        button { background: linear-gradient(45deg, #ff6b6b, #4ecdc4); color: white; box-shadow: 0 6px 20px rgba(255,107,107,0.3); }
+        button:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(255,107,107,0.4); }
+        .cluster-btn { background: linear-gradient(45deg, #ffaa00, #ff6b6b) !important; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255,170,0,0.7); } 70% { box-shadow: 0 0 0 20px rgba(255,170,0,0); } 100% { box-shadow: 0 0 0 0 rgba(255,170,0,0); } }
+        #preview { margin: 30px 0; text-align: center; }
+        #preview img { max-width: 250px; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
+        #gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; margin-top: 40px; padding: 20px; }
+        .thumb { width: 110px; height: 110px; object-fit: cover; border-radius: 16px; cursor: pointer; transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); border: 2px solid rgba(255,255,255,0.1); filter: saturate(0.8) contrast(1.1); }
+        .thumb:hover { transform: scale(1.12) rotate(3deg) translateY(-10px); border-color: rgba(255,255,255,0.5); box-shadow: 0 20px 50px rgba(0,0,0,0.6); filter: saturate(1.2) contrast(1.2) brightness(1.1); }
+        .stats { text-align: center; margin: 25px 0; font-size: 1.2em; font-weight: 500; background: rgba(255,255,255,0.08); padding: 20px; border-radius: 15px; backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .status { text-align: center; margin: 10px; font-weight: 500; }
+        .syncing { color: #ffaa00; animation: pulse 1.5s infinite; }
+        #ml-status { background: rgba(0,255,0,0.1); border: 1px solid #4ecdc4; padding: 10px; border-radius: 10px; margin: 10px 0; }
+        @media (max-width: 768px) { body { padding: 15px; } .controls { flex-direction: column; align-items: center; } button, select { width: 100%; max-width: 280px; } }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>NEXUS</h1>
-        <p>Upload everyday objects + label emotions. Machines will forge new connections.</p>
+        <p>Upload everyday objects + label emotions. Machines forge cosmic connections.</p>
+        <div class="status" id="syncStatus">🔄 Initializing global dataset...</div>
     </div>
 
     <div class="upload-area">
         <input type="file" id="imageInput" accept="image/*" style="display: none;">
-        <label for="imageInput">📸 Choose Image</label>
+        <label for="imageInput">📸 Choose Object</label>
         <br><br>
         <select id="emotionSelect">
             <option value="">Select Emotion</option>
@@ -121,111 +83,206 @@
     <div id="preview"></div>
     
     <div class="controls">
-        <button onclick="clearDataset()">Clear Dataset</button>
-        <button onclick="downloadDataset()">💾 Download Dataset</button>
-        <button onclick="showStats()">Stats</button>
+        <button onclick="downloadDataset()">💾 Export ML Dataset</button>
+        <button onclick="showStats()">📊 Stats</button>
+        <button onclick="runClustering()" class="cluster-btn" id="clusterBtn" disabled>🌌 CLUSTER NEXUS (ML Live)</button>
     </div>
 
     <div id="stats" class="stats" style="display: none;"></div>
+    <div id="ml-status" style="display: none;"></div>
     <div id="gallery"></div>
 
     <script>
-        let dataset = JSON.parse(localStorage.getItem('nexusDataset')) || [];
+        // 🔥 REPLACE WITH YOUR FIREBASE CONFIG FROM CONSOLE
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+        
+        let dataset = [];
+        let pyodide = null;
+
+        const emotions = ['anger', 'fear', 'disgust', 'happiness', 'sadness', 'surprise'];
         
         function getEmotionColor(emotion) {
-            const colors = {
-                anger: '#ff4444', disgust: '#88ff88', fear: '#4444ff',
-                happiness: '#ffaa00', sadness: '#6666ff', surprise: '#ff44ff'
-            };
+            const colors = { anger: '#ff4444', disgust: '#88ff88', fear: '#4444ff', happiness: '#ffaa00', sadness: '#6666ff', surprise: '#ff44ff' };
             return colors[emotion] || '#ccc';
         }
-        
-        function submitEntry() {
+
+        // 🔥 FIREBASE SYNC
+        async function syncDataset() {
+            try {
+                document.getElementById('syncStatus').textContent = '🔄 Syncing...';
+                document.getElementById('syncStatus').className = 'status syncing';
+                
+                const snapshot = await db.collection('nexus').orderBy('timestamp', 'desc').limit(100).get();
+                dataset = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                updateGallery();
+                document.getElementById('syncStatus').textContent = `🌐 ${dataset.length} global objects`;
+                document.getElementById('syncStatus').className = 'status';
+                
+                if (dataset.length >= 6) document.getElementById('clusterBtn').disabled = false;
+            } catch(e) {
+                document.getElementById('syncStatus').textContent = '❌ Firebase error (using demo)';
+                console.error('Firebase sync failed:', e);
+            }
+        }
+
+        // 🔥 UPLOAD TO FIREBASE
+        async function submitEntry() {
             const file = document.getElementById('imageInput').files[0];
             const emotion = document.getElementById('emotionSelect').value;
             
-            if (!file || !emotion) {
-                alert('Please select an image and emotion');
-                return;
-            }
+            if (!file || !emotion) return alert('Select image + emotion');
+            
+            document.getElementById('syncStatus').textContent = '📤 Uploading...';
             
             const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = canvas.height = 64;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, 64, 64);
+            reader.onload = async (e) => {
+                try {
+                    // Upload to Storage
+                    const storageRef = storage.ref(`nexus/${Date.now()}_${file.name}`);
+                    await storageRef.putString(e.target.result.split(',')[1], 'base64');
+                    const downloadURL = await storageRef.getDownloadURL();
                     
-                    const entry = {
-                        id: Date.now(),
-                        emotion: emotion,
-                        imageData: canvas.toDataURL('image/jpeg', 0.8),
-                        timestamp: new Date().toISOString(),
-                        filename: file.name
-                    };
+                    // Save to Firestore
+                    await db.collection('nexus').add({
+                        emotion, filename: file.name, imageURL: downloadURL,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
                     
-                    dataset.push(entry);
-                    localStorage.setItem('nexusDataset', JSON.stringify(dataset));
-                    updateGallery();
                     showPreview(e.target.result, emotion);
                     document.getElementById('imageInput').value = '';
                     document.getElementById('emotionSelect').value = '';
-                };
-                img.src = e.target.result;
+                    syncDataset();
+                } catch(e) {
+                    alert('Upload failed - using local demo');
+                }
             };
             reader.readAsDataURL(file);
         }
-        
+
+        // 🔥 LIVE ML CLUSTERING WITH PYODIDE
+        async function initPyodide() {
+            if (pyodide) return pyodide;
+            document.getElementById('ml-status').innerHTML = '🐍 Loading Python ML...';
+            document.getElementById('ml-status').style.display = 'block';
+            
+            pyodide = await loadPyodide();
+            await pyodide.runPythonAsync(`
+                import numpy as np
+                from sklearn.cluster import KMeans
+                from sklearn.decomposition import PCA
+                print("✅ Pyodide + scikit-learn ready!")
+            `);
+            
+            document.getElementById('ml-status').innerHTML = '✅ ML engine loaded!';
+            return pyodide;
+        }
+
+        async function runClustering() {
+            if (dataset.length < 6) return alert('Need 6+ images!');
+            
+            const py = await initPyodide();
+            document.getElementById('ml-status').innerHTML = '🌀 Computing clusters...';
+            
+            // Get pixel data
+            const pixelData = await Promise.all(dataset.slice(0, 50).map(async (entry, idx) => {
+                const img = new Image();
+                img.src = entry.imageURL || `https://via.placeholder.com/64?text=${idx}`;
+                await new Promise(r => img.onload = r);
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = canvas.height = 64;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, 64, 64);
+                
+                const imageData = ctx.getImageData(0, 0, 64, 64).data;
+                const gray = [];
+                for (let i = 0; i < imageData.length; i += 4) gray.push(imageData[i] * 0.3 + imageData[i+1] * 0.59 + imageData[i+2] * 0.11);
+                return gray;
+            }));
+            
+            const result = await py.runPythonAsync(`
+                X = np.array(${JSON.stringify(pixelData)})
+                X = X.reshape(-1, 4096)
+                X = X / 255.0
+                
+                pca = PCA(n_components=50)
+                X_pca = pca.fit_transform(X)
+                
+                kmeans = KMeans(n_clusters=6, random_state=42, n_init=10, max_iter=100)
+                clusters = kmeans.fit_predict(X_pca)
+                
+                {'clusters': clusters.tolist()}
+            `);
+            
+            // Animate results
+            result.clusters.toString().split(',').forEach((clusterStr, i) => {
+                const cluster = parseInt(clusterStr);
+                const thumbs = document.querySelectorAll('.thumb');
+                if (thumbs[i]) {
+                    const emotion = emotions[cluster];
+                    thumbs[i].style.borderColor = getEmotionColor(emotion);
+                    thumbs[i].title = `${dataset[i]?.emotion || 'unknown'} → ML: ${emotion} (cluster ${cluster})`;
+                    thumbs[i].dataset.cluster = cluster;
+                }
+            });
+            
+            document.getElementById('ml-status').innerHTML = `🎯 LIVE ML: ${dataset.length} objects → 6 clusters computed!`;
+            document.getElementById('gallery').classList.add('clustered');
+        }
+
         function showPreview(imageSrc, emotion) {
             document.getElementById('preview').innerHTML = 
                 `<img src="${imageSrc}" style="width: 200px; border: 4px solid ${getEmotionColor(emotion)}; border-radius: 15px;">`;
         }
-        
+
         function updateGallery() {
             const gallery = document.getElementById('gallery');
             gallery.innerHTML = dataset.map(entry => 
-                `<img src="${entry.imageData}" class="thumb" title="${entry.emotion} - ${new Date(entry.timestamp).toLocaleString()}" onclick="showDetail('${entry.id}')">`
+                `<img src="${entry.imageURL || 'https://via.placeholder.com/110?text=?'}"
+                      class="thumb" 
+                      title="${entry.emotion} - ${entry.filename || 'unknown'}"
+                      onclick="showDetail('${entry.id}')">`
             ).join('');
         }
-        
+
         function showDetail(id) {
-            const entry = dataset.find(e => e.id == id);
-            if (entry) {
-                alert(`Emotion: ${entry.emotion}\nFile: ${entry.filename}\nTime: ${new Date(entry.timestamp).toLocaleString()}`);
-            }
+            const entry = dataset.find(e => e.id === id);
+            if (entry) alert(`Emotion: ${entry.emotion}\nFile: ${entry.filename}\nID: ${entry.id}`);
         }
-        
+
         function showStats() {
             const stats = document.getElementById('stats');
             const counts = {};
             dataset.forEach(e => counts[e.emotion] = (counts[e.emotion] || 0) + 1);
-            const total = dataset.length;
-            stats.innerHTML = `Total: ${total} | ${Object.entries(counts).map(([k,v]) => `${k}: ${v}`).join(' | ')}`;
+            stats.innerHTML = `Total: ${dataset.length}<br>${Object.entries(counts).map(([k,v]) => `${k}: ${v}`).join(' | ')}`;
             stats.style.display = stats.style.display === 'none' ? 'block' : 'none';
         }
-        
-        function downloadDataset() {
-            const dataStr = JSON.stringify(dataset, null, 2);
+
+        async function downloadDataset() {
+            const mlReady = dataset.map(entry => ({ ...entry }));
+            const dataStr = JSON.stringify(mlReady, null, 2);
             const blob = new Blob([dataStr], {type: 'application/json'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `nexus-emotions-${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `nexus-global-${new Date().toISOString().split('T')[0]}.json`;
             a.click();
         }
-        
-        function clearDataset() {
-            if (confirm('Clear all data?')) {
-                dataset = [];
-                localStorage.removeItem('nexusDataset');
-                updateGallery();
-                document.getElementById('preview').innerHTML = '';
-                document.getElementById('stats').style.display = 'none';
-            }
-        }
-        
+
+        // Initialize
         document.getElementById('imageInput').addEventListener('change', function() {
             if (this.files[0]) {
                 const reader = new FileReader();
@@ -233,8 +290,9 @@
                 reader.readAsDataURL(this.files[0]);
             }
         });
-        
-        updateGallery();
+
+        syncDataset();
+        setInterval(syncDataset, 10000); // Refresh every 10s
     </script>
 </body>
 </html>
