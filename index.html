@@ -26,14 +26,9 @@
                 <h1 class="visually-hidden">NEXUS</h1>
                 <img src="assets/nexus.png" alt="NEXUS logo" class="hero-logo">
                 <p class="hero-lede">
-                    A shared field of everyday objects annotated with six “universal” emotions.
+                    A shared field of everyday objects annotated with six "universal" emotions.
                     Each contribution becomes a point in a live clustering experiment running entirely in the browser.
                 </p>
-                <div class="hero-meta">
-                    <span>6 basic emotions</span>
-                    <span>Pyodide + scikit‑learn</span>
-                    <span>Firebase global dataset</span>
-                </div>
                 <div class="status-pill" id="syncStatus">Initialising global dataset…</div>
             </div>
 
@@ -42,13 +37,18 @@
                 <div class="section-label small">ADD OBJECT</div>
                 <h2 class="panel-title">Contribute to the dataset</h2>
                 <p class="panel-copy">
-                    Upload an object, select the emotion it carries for you, and send it into the shared space.
+                    Drag an image here or click to browse, select the emotion it carries for you, and send it into the shared space.
                 </p>
 
-                <div class="upload-area">
+                <div class="upload-area" id="uploadArea">
                     <input type="file" id="imageInput" accept="image/*" style="display:none;">
-                    <label class="btn-outline" for="imageInput">Choose image</label>
+                    <div class="upload-zone">
+                        <div class="camera-icon">📸</div>
+                        <p class="upload-text">Drag image here or click to choose</p>
+                    </div>
+                </div>
 
+                <div class="emotion-row">
                     <select id="emotionSelect">
                         <option value="">Select emotion</option>
                         <option value="anger">Anger</option>
@@ -58,8 +58,7 @@
                         <option value="sadness">Sadness</option>
                         <option value="surprise">Surprise</option>
                     </select>
-
-                    <button class="btn-solid" onclick="submitEntry()">Add to NEXUS</button>
+                    <button class="btn-solid upload-btn" onclick="submitEntry()">ADD TO NEXUS</button>
                 </div>
 
                 <div id="preview" class="preview"></div>
@@ -85,7 +84,7 @@
                 <div class="section-label small">DATASET VIEW</div>
                 <h2>Global object field</h2>
                 <p>
-                    Each tile is an object–emotion pair. When clustering runs, borders re‑colour to show the model’s groupings.
+                    Each tile is an object–emotion pair. When clustering runs, borders re‑colour to show the model's groupings.
                 </p>
             </div>
             <div id="gallery" class="gallery"></div>
@@ -125,6 +124,60 @@
             return colors[emotion] || '#2657d6';
         }
 
+        // DRAG & DROP UPLOAD
+        const uploadArea = document.getElementById('uploadArea');
+        const imageInput = document.getElementById('imageInput');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            uploadArea.classList.add('drag-highlight');
+        }
+
+        function unhighlight(e) {
+            uploadArea.classList.remove('drag-highlight');
+        }
+
+        uploadArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        uploadArea.addEventListener('click', () => imageInput.click());
+
+        imageInput.addEventListener('change', function() {
+            if (!this.files[0]) return;
+            handleFiles(this.files);
+        });
+
+        function handleFiles(files) {
+            const file = Array.from(files).find(f => f.type.startsWith('image/'));
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => showPreview(e.target.result, document.getElementById('emotionSelect').value);
+                reader.readAsDataURL(file);
+                imageInput.files = files;
+            }
+        }
+
         // LIVE MULTI‑USER SYNC
         async function syncDataset() {
             const statusEl = document.getElementById('syncStatus');
@@ -162,7 +215,7 @@
 
         // UPLOAD TO FIREBASE + STORAGE
         async function submitEntry() {
-            const file = document.getElementById('imageInput').files[0];
+            const file = imageInput.files[0];
             const emotion = document.getElementById('emotionSelect').value;
             
             if (!file || !emotion) {
@@ -190,7 +243,7 @@
                     });
                     
                     showPreview(e.target.result, emotion);
-                    document.getElementById('imageInput').value = '';
+                    imageInput.value = '';
                     document.getElementById('emotionSelect').value = '';
                     await syncDataset();
                 } catch (err) {
@@ -204,6 +257,7 @@
             reader.readAsDataURL(file);
         }
 
+        // [Rest of the JavaScript remains exactly the same - PYODIDE, clustering, gallery, etc.]
         // PYODIDE + CLUSTERING
         async function initPyodide() {
             if (pyodide) return pyodide;
@@ -330,15 +384,6 @@
             a.download = `nexus-global-${new Date().toISOString().split('T')[0]}.json`;
             a.click();
         }
-
-        // Event listeners
-        document.getElementById('imageInput').addEventListener('change', function() {
-            if (!this.files[0]) return;
-            const reader = new FileReader();
-            reader.onload = (e) =>
-                showPreview(e.target.result, document.getElementById('emotionSelect').value);
-            reader.readAsDataURL(this.files[0]);
-        });
 
         // Initialise app
         syncDataset();
