@@ -51,6 +51,25 @@ body {
     color: #ffffff;
 }
 
+.hero-logo {
+    display: block;
+    width: min(42vw, 360px);
+    max-width: 100%;
+    height: auto;
+    margin: 4px 0 8px;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
 .hero-lede {
     margin-top: 16px;
     max-width: 520px;
