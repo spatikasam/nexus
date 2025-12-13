@@ -22,14 +22,19 @@
         <!-- HERO / INTRO BLOCK -->
         <header class="hero">
             <div class="hero-left">
-                <div class="section-label">WHAT IS NEXUS?</div>
                 <h1 class="visually-hidden">NEXUS</h1>
                 <img src="assets/nexus.png" alt="NEXUS logo" class="hero-logo">
                 <p class="hero-lede">
                     A shared field of everyday objects annotated with six "universal" emotions.
                     Each contribution becomes a point in a live clustering experiment running entirely in the browser.
                 </p>
-                <div class="status-pill" id="syncStatus">Initialising global dataset…</div>
+                <div class="status-section">
+                    <div class="status-pill" id="syncStatus">Initialising global dataset…</div>
+                    <div class="utility-controls">
+                        <button class="btn-ghost" onclick="downloadDataset()">Export ML dataset</button>
+                        <button class="btn-ghost" onclick="showStats()">View stats</button>
+                    </div>
+                </div>
             </div>
 
             <!-- UPLOAD PANEL -->
@@ -68,12 +73,10 @@
             </div>
         </header>
 
-        <!-- CONTROLS -->
-        <section class="controls">
-            <button class="btn-ghost" onclick="downloadDataset()">Export ML dataset</button>
-            <button class="btn-ghost" onclick="showStats()">View stats</button>
-            <button onclick="runClustering()" class="btn-solid cluster-btn" id="clusterBtn" disabled>
-                Cluster NEXUS (ML live)
+        <!-- PROMINENT CLUSTER BUTTON -->
+        <section class="cluster-hero-section">
+            <button onclick="runClustering()" class="cluster-hero-btn" id="clusterBtn" disabled>
+                Cluster NEXUS (ML LIVE)
             </button>
         </section>
 
@@ -94,17 +97,15 @@
         </section>
     </main>
 
-    <!-- [JavaScript remains exactly the same as before - no changes needed] -->
     <script>
-        // [All previous JavaScript code exactly as provided - drag/drop, Firebase, Pyodide, etc.]
         const firebaseConfig = {
-          apiKey: "AIzaSyDc6m_tMPIAQS1pNzRCXyRJJo75-8M6fz4",
-          authDomain: "nexus-emotions.firebaseapp.com",
-          projectId: "nexus-emotions",
-          storageBucket: "nexus-emotions.firebasestorage.app",
-          messagingSenderId: "794178475232",
-          appId: "1:794178475232:web:1e00f87111f4ba0e1aec85",
-          measurementId: "G-TVVE5FS898"
+            apiKey: "AIzaSyDc6m_tMPIAQS1pNzRCXyRJJo75-8M6fz4",
+            authDomain: "nexus-emotions.firebaseapp.com",
+            projectId: "nexus-emotions",
+            storageBucket: "nexus-emotions.firebasestorage.app",
+            messagingSenderId: "794178475232",
+            appId: "1:794178475232:web:1e00f87111f4ba0e1aec85",
+            measurementId: "G-TVVE5FS898"
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -114,8 +115,7 @@
         let dataset = [];
         let pyodide = null;
         const emotions = ['anger', 'fear', 'disgust', 'happiness', 'sadness', 'surprise'];
-
-        // [All functions exactly as before - getEmotionColor, syncDataset, submitEntry, etc.]
+        
         function getEmotionColor(emotion) {
             const colors = { 
                 anger: '#ff4b5c', disgust: '#46c37b', fear: '#6b5bff',
@@ -124,7 +124,7 @@
             return colors[emotion] || '#2657d6';
         }
 
-        // DRAG & DROP (unchanged)
+        // DRAG & DROP
         const uploadArea = document.getElementById('uploadArea');
         const imageInput = document.getElementById('imageInput');
 
@@ -160,7 +160,7 @@
 
         function handleFiles(files) {
             const file = Array.from(files).find(f => f.type.startsWith('image/'));
-            if (file && file.size <= 10 * 1024 * 1024) { // 10MB limit
+            if (file && file.size <= 10 * 1024 * 1024) {
                 const reader = new FileReader();
                 reader.onload = (e) => showPreview(e.target.result, document.getElementById('emotionSelect').value);
                 reader.readAsDataURL(file);
@@ -170,7 +170,6 @@
             }
         }
 
-        // [Rest of JavaScript exactly the same - syncDataset, submitEntry, Pyodide, etc.]
         async function syncDataset() {
             const statusEl = document.getElementById('syncStatus');
             try {
@@ -184,7 +183,7 @@
                 dataset = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
                 updateGallery();
-                statusEl.textContent = `${dataset.length} objects in NEXUS`;
+                statusEl.textContent = `${dataset.length} images in NEXUS`;
                 statusEl.classList.remove('status-loading');
                 
                 if (dataset.length >= 6) document.getElementById('clusterBtn').disabled = false;
@@ -199,7 +198,6 @@
             }
         }
 
-        // [Include ALL other functions exactly as before...]
         async function submitEntry() {
             const file = imageInput.files[0];
             const emotion = document.getElementById('emotionSelect').value;
@@ -210,7 +208,7 @@
             }
             
             const statusEl = document.getElementById('syncStatus');
-            statusEl.textContent = 'Uploading object…';
+            statusEl.textContent = 'Uploading image…';
             statusEl.classList.add('status-loading');
             
             const reader = new FileReader();
@@ -234,14 +232,13 @@
                     alert('Upload failed – check Firebase configuration.');
                     console.error(err);
                 } finally {
-                    statusEl.textContent = `${dataset.length} objects in NEXUS`;
+                    statusEl.textContent = `${dataset.length} images in NEXUS`;
                     statusEl.classList.remove('status-loading');
                 }
             };
             reader.readAsDataURL(file);
         }
 
-        // [Include showPreview, updateGallery, runClustering, etc. - all unchanged]
         function showPreview(imageSrc, emotion) {
             const preview = document.getElementById('preview');
             preview.innerHTML = `
@@ -261,6 +258,111 @@
                          alt="${entry.filename || 'object'}">
                 </button>`
             ).join('');
+        }
+
+        function showDetail(id) {
+            const entry = dataset.find(e => e.id === id);
+            if (!entry) return;
+            alert(`Emotion: ${entry.emotion}\nFile: ${entry.filename}\nID: ${entry.id}`);
+        }
+
+        function showStats() {
+            const stats = document.getElementById('stats');
+            const counts = {};
+            dataset.forEach(e => {
+                const key = e.emotion || 'unknown';
+                counts[key] = (counts[key] || 0) + 1;
+            });
+            stats.innerHTML = `Total: ${dataset.length}<br>${Object.entries(counts)
+                .map(([k,v]) => `${k}: ${v}`).join(' | ')}`;
+            stats.style.display = (stats.style.display === 'none' || stats.style.display === '') ? 'block' : 'none';
+        }
+
+        async function downloadDataset() {
+            const mlReady = dataset.map(entry => ({ ...entry }));
+            const dataStr = JSON.stringify(mlReady, null, 2);
+            const blob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nexus-global-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+        }
+
+        async function initPyodide() {
+            if (pyodide) return pyodide;
+            const mlStatus = document.getElementById('ml-status');
+            mlStatus.style.display = 'block';
+            mlStatus.textContent = 'Loading Pyodide + scikit-learn…';
+            
+            pyodide = await loadPyodide();
+            await pyodide.runPythonAsync(`
+                import numpy as np
+                from sklearn.cluster import KMeans
+                from sklearn.decomposition import PCA
+            `);
+            
+            mlStatus.textContent = 'ML engine ready.';
+            return pyodide;
+        }
+
+        async function runClustering() {
+            if (dataset.length < 6) {
+                alert('Need at least 6 images before clustering.');
+                return;
+            }
+            
+            const py = await initPyodide();
+            const mlStatus = document.getElementById('ml-status');
+            mlStatus.style.display = 'block';
+            mlStatus.textContent = 'Computing clusters…';
+            
+            const pixelData = await Promise.all(dataset.slice(0, 50).map(async (entry, idx) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.src = entry.imageURL || `https://picsum.photos/seed/${idx}/110/110`;
+                await new Promise(r => img.onload = r);
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = canvas.height = 64;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, 64, 64);
+                
+                const imageData = ctx.getImageData(0, 0, 64, 64).data;
+                const gray = [];
+                for (let i = 0; i < imageData.length; i += 4) {
+                    gray.push(imageData[i] * 0.3 + imageData[i+1] * 0.59 + imageData[i+2] * 0.11);
+                }
+                return gray;
+            }));
+            
+            const result = await py.runPythonAsync(`
+                X = np.array(${JSON.stringify(pixelData)})
+                X = X.reshape(-1, 4096)
+                X = X / 255.0
+                
+                pca = PCA(n_components=50)
+                X_pca = pca.fit_transform(X)
+                
+                kmeans = KMeans(n_clusters=6, random_state=42, n_init=10, max_iter=100)
+                clusters = kmeans.fit_predict(X_pca)
+                
+                {"clusters": clusters.tolist()}
+            `);
+            
+            const clusters = result.clusters.toJs();
+            const thumbs = document.querySelectorAll('.thumb');
+            
+            clusters.forEach((cluster, i) => {
+                if (!thumbs[i]) return;
+                const emotion = emotions[cluster];
+                thumbs[i].style.borderColor = getEmotionColor(emotion);
+                thumbs[i].classList.add('thumb-clustered');
+                thumbs[i].title = `${dataset[i]?.emotion || 'unknown'} → ML: ${emotion} (cluster ${cluster})`;
+            });
+            
+            mlStatus.textContent = `Live ML clustering completed for ${dataset.length} images.`;
+            document.getElementById('gallery').classList.add('gallery-clustered');
         }
 
         // Initialise
