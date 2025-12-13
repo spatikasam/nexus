@@ -4,7 +4,7 @@ NEXUS is a browser-based artwork that collects images of everyday objects, asks 
 
 ## Live demo
 
-https://YOUR-USERNAME.github.io/nexus-emotions
+https://spatikasam.github.io/nexus/
 
 ## How it works
 
