@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS: Emotional Objects Clustering</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            color: white; 
+            margin: 0; 
+            padding: 20px; 
+            min-height: 100vh;
+            font-weight: 300;
+            letter-spacing: -0.01em;
+        }
+        .header h1 { 
+            font-size: 3.5em; 
+            margin: 0; 
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent;
+            font-weight: 200;
+            letter-spacing: -0.03em;
+        }
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+            margin-top: 10px;
+            font-weight: 300;
+            letter-spacing: -0.01em;
+        }
+        .upload-area { 
+            border: 2px dashed #666; 
+            padding: 40px; 
+            text-align: center; 
+            margin: 20px 0; 
+            border-radius: 15px;
+            background: rgba(255,255,255,0.05);
+            font-weight: 400;
+        }
+        .upload-area label {
+            font-size: 1.4em;
+            font-weight: 500;
+        }
+        .controls { display: flex; gap: 15px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
+        select, button { 
+            padding: 12px 24px; 
+            border: none; 
+            border-radius: 25px; 
+            font-size: 16px; 
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+        button { 
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4); 
+            cursor: pointer; 
+            color: white; 
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255,107,107,0.3);
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,107,107,0.4); }
+        #preview { margin: 20px 0; text-align: center; }
+        #gallery { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); 
+            gap: 10px; 
+            margin-top: 30px;
+        }
+        .thumb { 
+            width: 100px; height: 100px; 
+            object-fit: cover; 
+            border-radius: 12px; 
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+        .thumb:hover { 
+            transform: scale(1.08) rotate(2deg); 
+            border-color: rgba(255,255,255,0.4);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+        }
+        .stats { 
+            text-align: center; 
+            margin: 20px 0; 
+            font-size: 1.2em; 
+            font-weight: 500;
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NEXUS</h1>
+        <p>Upload everyday objects + label emotions. Machines will forge new connections.</p>
+    </div>
+
+    <div class="upload-area">
+        <input type="file" id="imageInput" accept="image/*" style="display: none;">
+        <label for="imageInput">📸 Choose Image</label>
+        <br><br>
+        <select id="emotionSelect">
+            <option value="">Select Emotion</option>
+            <option value="anger">😠 Anger</option>
+            <option value="disgust">🤢 Disgust</option>
+            <option value="fear">😨 Fear</option>
+            <option value="happiness">😊 Happiness</option>
+            <option value="sadness">😢 Sadness</option>
+            <option value="surprise">😲 Surprise</option>
+        </select>
+        <br><br>
+        <button onclick="submitEntry()">Add to NEXUS</button>
+    </div>
+
+    <div id="preview"></div>
+    
+    <div class="controls">
+        <button onclick="clearDataset()">Clear Dataset</button>
+        <button onclick="downloadDataset()">💾 Download Dataset</button>
+        <button onclick="showStats()">Stats</button>
+    </div>
+
+    <div id="stats" class="stats" style="display: none;"></div>
+    <div id="gallery"></div>
+
+    <script>
+        let dataset = JSON.parse(localStorage.getItem('nexusDataset')) || [];
+        
+        function getEmotionColor(emotion) {
+            const colors = {
+                anger: '#ff4444', disgust: '#88ff88', fear: '#4444ff',
+                happiness: '#ffaa00', sadness: '#6666ff', surprise: '#ff44ff'
+            };
+            return colors[emotion] || '#ccc';
+        }
+        
+        function submitEntry() {
+            const file = document.getElementById('imageInput').files[0];
+            const emotion = document.getElementById('emotionSelect').value;
+            
+            if (!file || !emotion) {
+                alert('Please select an image and emotion');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = canvas.height = 64;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, 64, 64);
+                    
+                    const entry = {
+                        id: Date.now(),
+                        emotion: emotion,
+                        imageData: canvas.toDataURL('image/jpeg', 0.8),
+                        timestamp: new Date().toISOString(),
+                        filename: file.name
+                    };
+                    
+                    dataset.push(entry);
+                    localStorage.setItem('nexusDataset', JSON.stringify(dataset));
+                    updateGallery();
+                    showPreview(e.target.result, emotion);
+                    document.getElementById('imageInput').value = '';
+                    document.getElementById('emotionSelect').value = '';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function showPreview(imageSrc, emotion) {
+            document.getElementById('preview').innerHTML = 
+                `<img src="${imageSrc}" style="width: 200px; border: 4px solid ${getEmotionColor(emotion)}; border-radius: 15px;">`;
+        }
+        
+        function updateGallery() {
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = dataset.map(entry => 
+                `<img src="${entry.imageData}" class="thumb" title="${entry.emotion} - ${new Date(entry.timestamp).toLocaleString()}" onclick="showDetail('${entry.id}')">`
+            ).join('');
+        }
+        
+        function showDetail(id) {
+            const entry = dataset.find(e => e.id == id);
+            if (entry) {
+                alert(`Emotion: ${entry.emotion}\nFile: ${entry.filename}\nTime: ${new Date(entry.timestamp).toLocaleString()}`);
+            }
+        }
+        
+        function showStats() {
+            const stats = document.getElementById('stats');
+            const counts = {};
+            dataset.forEach(e => counts[e.emotion] = (counts[e.emotion] || 0) + 1);
+            const total = dataset.length;
+            stats.innerHTML = `Total: ${total} | ${Object.entries(counts).map(([k,v]) => `${k}: ${v}`).join(' | ')}`;
+            stats.style.display = stats.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function downloadDataset() {
+            const dataStr = JSON.stringify(dataset, null, 2);
+            const blob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nexus-emotions-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+        }
+        
+        function clearDataset() {
+            if (confirm('Clear all data?')) {
+                dataset = [];
+                localStorage.removeItem('nexusDataset');
+                updateGallery();
+                document.getElementById('preview').innerHTML = '';
+                document.getElementById('stats').style.display = 'none';
+            }
+        }
+        
+        document.getElementById('imageInput').addEventListener('change', function() {
+            if (this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => showPreview(e.target.result, document.getElementById('emotionSelect').value);
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+        
+        updateGallery();
+    </script>
+</body>
+</html>
