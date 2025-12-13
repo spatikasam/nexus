@@ -6,52 +6,90 @@
     <title>NEXUS: Emotional Objects Clustering</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     
     <!-- PYODIDE for LIVE ML -->
     <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
     
-    <!-- FIREBASE - REPLACE CONFIG BELOW -->
+    <!-- FIREBASE (compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-storage-compat.js"></script>
 </head>
 <body>
-    <div class="header">
-        <h1>NEXUS</h1>
-        <p>Upload everyday objects + label emotions. Machines forge cosmic connections.</p>
-        <div class="status" id="syncStatus">🔄 Initializing global dataset...</div>
-    </div>
+    <main class="page">
+        <!-- HERO / INTRO BLOCK -->
+        <header class="hero">
+            <div class="hero-left">
+                <div class="section-label">WHAT IS NEXUS?</div>
+                <h1>NEXUS</h1>
+                <p class="hero-lede">
+                    A shared field of everyday objects annotated with six “universal” emotions.
+                    Each contribution becomes a point in a live clustering experiment running entirely in the browser.
+                </p>
+                <div class="hero-meta">
+                    <span>6 basic emotions</span>
+                    <span>Pyodide + scikit‑learn</span>
+                    <span>Firebase global dataset</span>
+                </div>
+                <div class="status-pill" id="syncStatus">Initialising global dataset…</div>
+            </div>
 
-    <div class="upload-area">
-        <input type="file" id="imageInput" accept="image/*" style="display: none;">
-        <label for="imageInput">📸 Choose Object</label>
-        <br><br>
-        <select id="emotionSelect">
-            <option value="">Select Emotion</option>
-            <option value="anger">😠 Anger</option>
-            <option value="disgust">🤢 Disgust</option>
-            <option value="fear">😨 Fear</option>
-            <option value="happiness">😊 Happiness</option>
-            <option value="sadness">😢 Sadness</option>
-            <option value="surprise">😲 Surprise</option>
-        </select>
-        <br><br>
-        <button onclick="submitEntry()">Add to NEXUS</button>
-    </div>
+            <!-- UPLOAD PANEL -->
+            <div class="hero-right upload-card">
+                <div class="section-label small">ADD OBJECT</div>
+                <h2 class="panel-title">Contribute to the dataset</h2>
+                <p class="panel-copy">
+                    Upload an object, select the emotion it carries for you, and send it into the shared space.
+                </p>
 
-    <div id="preview"></div>
-    
-    <div class="controls">
-        <button onclick="downloadDataset()">💾 Export ML Dataset</button>
-        <button onclick="showStats()">📊 Stats</button>
-        <button onclick="runClustering()" class="cluster-btn" id="clusterBtn" disabled>🌌 CLUSTER NEXUS (ML Live)</button>
-    </div>
+                <div class="upload-area">
+                    <input type="file" id="imageInput" accept="image/*" style="display:none;">
+                    <label class="btn-outline" for="imageInput">Choose image</label>
 
-    <div id="stats" class="stats" style="display: none;"></div>
-    <div id="ml-status" style="display: none;"></div>
-    <div id="gallery"></div>
+                    <select id="emotionSelect">
+                        <option value="">Select emotion</option>
+                        <option value="anger">Anger</option>
+                        <option value="disgust">Disgust</option>
+                        <option value="fear">Fear</option>
+                        <option value="happiness">Happiness</option>
+                        <option value="sadness">Sadness</option>
+                        <option value="surprise">Surprise</option>
+                    </select>
+
+                    <button class="btn-solid" onclick="submitEntry()">Add to NEXUS</button>
+                </div>
+
+                <div id="preview" class="preview"></div>
+            </div>
+        </header>
+
+        <!-- CONTROLS -->
+        <section class="controls">
+            <button class="btn-ghost" onclick="downloadDataset()">Export ML dataset</button>
+            <button class="btn-ghost" onclick="showStats()">View stats</button>
+            <button onclick="runClustering()" class="btn-solid cluster-btn" id="clusterBtn" disabled>
+                Cluster NEXUS (ML live)
+            </button>
+        </section>
+
+        <!-- STATS / ML STATUS -->
+        <section id="stats" class="stats" style="display:none;"></section>
+        <section id="ml-status" class="ml-status" style="display:none;"></section>
+
+        <!-- GALLERY -->
+        <section class="gallery-section">
+            <div class="gallery-header">
+                <div class="section-label small">DATASET VIEW</div>
+                <h2>Global object field</h2>
+                <p>
+                    Each tile is an object–emotion pair. When clustering runs, borders re‑colour to show the model’s groupings.
+                </p>
+            </div>
+            <div id="gallery" class="gallery"></div>
+        </section>
+    </main>
 
     <script>
         const firebaseConfig = {
@@ -63,7 +101,6 @@
           appId: "1:794178475232:web:1e00f87111f4ba0e1aec85",
           measurementId: "G-TVVE5FS898"
         };
-
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
@@ -77,102 +114,124 @@
         
         function getEmotionColor(emotion) {
             const colors = { 
-                anger: '#ff4444', 
-                disgust: '#88ff88', 
-                fear: '#4444ff', 
-                happiness: '#ffaa00', 
-                sadness: '#6666ff', 
-                surprise: '#ff44ff' 
+                anger: '#ff4b5c',
+                disgust: '#46c37b',
+                fear: '#6b5bff',
+                happiness: '#ffd166',
+                sadness: '#4d7cff',
+                surprise: '#ff66c4' 
             };
-            return colors[emotion] || '#ccc';
+            return colors[emotion] || '#2657d6';
         }
 
-        // 🔥 FIREBASE SYNC - LIVE MULTI-USER DATASET
+        // LIVE MULTI‑USER SYNC
         async function syncDataset() {
+            const statusEl = document.getElementById('syncStatus');
             try {
-                document.getElementById('syncStatus').textContent = '🔄 Syncing...';
-                document.getElementById('syncStatus').className = 'status syncing';
+                statusEl.textContent = 'Syncing dataset…';
+                statusEl.classList.add('status-loading');
                 
-                const snapshot = await db.collection('nexus').orderBy('timestamp', 'desc').limit(100).get();
+                const snapshot = await db.collection('nexus')
+                    .orderBy('timestamp', 'desc')
+                    .limit(100)
+                    .get();
                 dataset = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
                 updateGallery();
-                document.getElementById('syncStatus').textContent = `🌐 ${dataset.length} global objects`;
-                document.getElementById('syncStatus').className = 'status';
+                statusEl.textContent = `${dataset.length} objects in NEXUS`;
+                statusEl.classList.remove('status-loading');
                 
-                if (dataset.length >= 6) document.getElementById('clusterBtn').disabled = false;
-            } catch(e) {
-                document.getElementById('syncStatus').textContent = '❌ Firebase error (demo mode)';
+                if (dataset.length >= 6) {
+                    document.getElementById('clusterBtn').disabled = false;
+                }
+            } catch (e) {
+                statusEl.textContent = 'Firebase unavailable – demo dataset loaded';
+                statusEl.classList.remove('status-loading');
                 console.error('Firebase sync failed:', e);
-                // Demo data
+                
                 dataset = Array(12).fill().map((_, i) => ({
-                    id: i, emotion: emotions[i%6], filename: `demo_${i}.jpg`,
+                    id: i,
+                    emotion: emotions[i % 6],
+                    filename: `demo_${i}.jpg`,
                     imageURL: `https://picsum.photos/seed/${i}/110/110`
                 }));
                 updateGallery();
             }
         }
 
-        // 🔥 UPLOAD TO FIREBASE + STORAGE
+        // UPLOAD TO FIREBASE + STORAGE
         async function submitEntry() {
             const file = document.getElementById('imageInput').files[0];
             const emotion = document.getElementById('emotionSelect').value;
             
-            if (!file || !emotion) return alert('Select image + emotion');
+            if (!file || !emotion) {
+                alert('Select an image and an emotion.');
+                return;
+            }
             
-            document.getElementById('syncStatus').textContent = '📤 Uploading...';
+            const statusEl = document.getElementById('syncStatus');
+            statusEl.textContent = 'Uploading object…';
+            statusEl.classList.add('status-loading');
             
             const reader = new FileReader();
             reader.onload = async (e) => {
                 try {
-                    // Upload image to Firebase Storage
+                    const base64 = e.target.result.split(',')[1];
                     const storageRef = storage.ref(`nexus/${Date.now()}_${file.name}`);
-                    await storageRef.putString(e.target.result.split(',')[1], 'base64');
+                    await storageRef.putString(base64, 'base64');
                     const downloadURL = await storageRef.getDownloadURL();
                     
-                    // Save metadata to Firestore
                     await db.collection('nexus').add({
-                        emotion, filename: file.name, imageURL: downloadURL,
+                        emotion,
+                        filename: file.name,
+                        imageURL: downloadURL,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     
                     showPreview(e.target.result, emotion);
                     document.getElementById('imageInput').value = '';
                     document.getElementById('emotionSelect').value = '';
-                    syncDataset();
-                } catch(e) {
-                    alert('Upload failed - check Firebase config');
-                    console.error(e);
+                    await syncDataset();
+                } catch (err) {
+                    alert('Upload failed – check Firebase configuration.');
+                    console.error(err);
+                } finally {
+                    statusEl.textContent = `${dataset.length} objects in NEXUS`;
+                    statusEl.classList.remove('status-loading');
                 }
             };
             reader.readAsDataURL(file);
         }
 
-        // 🔥 LIVE ML CLUSTERING WITH PYODIDE (scikit-learn in browser)
+        // PYODIDE + CLUSTERING
         async function initPyodide() {
             if (pyodide) return pyodide;
-            document.getElementById('ml-status').innerHTML = '🐍 Loading Python ML...';
-            document.getElementById('ml-status').style.display = 'block';
+            const mlStatus = document.getElementById('ml-status');
+            mlStatus.style.display = 'block';
+            mlStatus.textContent = 'Loading Pyodide + scikit‑learn…';
             
             pyodide = await loadPyodide();
             await pyodide.runPythonAsync(`
                 import numpy as np
                 from sklearn.cluster import KMeans
                 from sklearn.decomposition import PCA
-                print("✅ Pyodide + scikit-learn ready!")
             `);
             
-            document.getElementById('ml-status').innerHTML = '✅ ML engine loaded!';
+            mlStatus.textContent = 'ML engine ready.';
             return pyodide;
         }
 
         async function runClustering() {
-            if (dataset.length < 6) return alert('Need 6+ images!');
+            if (dataset.length < 6) {
+                alert('Need at least 6 images before clustering.');
+                return;
+            }
             
             const py = await initPyodide();
-            document.getElementById('ml-status').innerHTML = '🌀 Computing clusters...';
+            const mlStatus = document.getElementById('ml-status');
+            mlStatus.style.display = 'block';
+            mlStatus.textContent = 'Computing clusters…';
             
-            // Extract pixel data from images
             const pixelData = await Promise.all(dataset.slice(0, 50).map(async (entry, idx) => {
                 const img = new Image();
                 img.crossOrigin = 'anonymous';
@@ -192,7 +251,6 @@
                 return gray;
             }));
             
-            // RUN scikit-learn KMeans + PCA
             const result = await py.runPythonAsync(`
                 X = np.array(${JSON.stringify(pixelData)})
                 X = X.reshape(-1, 4096)
@@ -204,53 +262,61 @@
                 kmeans = KMeans(n_clusters=6, random_state=42, n_init=10, max_iter=100)
                 clusters = kmeans.fit_predict(X_pca)
                 
-                {'clusters': clusters.tolist()}
+                {"clusters": clusters.tolist()}
             `);
             
-            // Animate ML results
             const clusters = result.clusters.toJs();
+            const thumbs = document.querySelectorAll('.thumb');
+            
             clusters.forEach((cluster, i) => {
-                const thumbs = document.querySelectorAll('.thumb');
-                if (thumbs[i]) {
-                    const emotion = emotions[cluster];
-                    thumbs[i].style.borderColor = getEmotionColor(emotion);
-                    thumbs[i].title = `${dataset[i]?.emotion || 'unknown'} → ML: ${emotion} (cluster ${cluster})`;
-                    thumbs[i].dataset.cluster = cluster;
-                }
+                if (!thumbs[i]) return;
+                const emotion = emotions[cluster];
+                thumbs[i].style.borderColor = getEmotionColor(emotion);
+                thumbs[i].classList.add('thumb-clustered');
+                thumbs[i].title = `${dataset[i]?.emotion || 'unknown'} → ML: ${emotion} (cluster ${cluster})`;
             });
             
-            document.getElementById('ml-status').innerHTML = `🎯 LIVE ML: ${dataset.length} objects → 6 clusters computed!`;
-            document.getElementById('gallery').classList.add('clustered');
+            mlStatus.textContent = `Live ML clustering completed for ${dataset.length} objects.`;
+            document.getElementById('gallery').classList.add('gallery-clustered');
         }
 
         function showPreview(imageSrc, emotion) {
-            document.getElementById('preview').innerHTML = 
-                `<img src="${imageSrc}" style="width: 200px; border: 4px solid ${getEmotionColor(emotion)}; border-radius: 15px;">`;
+            const preview = document.getElementById('preview');
+            preview.innerHTML = `
+                <div class="preview-frame">
+                    <img src="${imageSrc}" alt="preview">
+                    <div class="preview-label">${emotion || 'pending label'}</div>
+                </div>
+            `;
         }
 
         function updateGallery() {
             const gallery = document.getElementById('gallery');
             gallery.innerHTML = dataset.map(entry => 
-                `<img src="${entry.imageURL || 'https://picsum.photos/seed/nexus/110/110'}"
-                      class="thumb" 
-                      title="${entry.emotion || 'unknown'} - ${entry.filename || 'demo'}"
-                      onclick="showDetail('${entry.id}')">`
+                `<button class="thumb" onclick="showDetail('${entry.id}')"
+                         title="${entry.emotion || 'unknown'} – ${entry.filename || 'demo'}">
+                    <img src="${entry.imageURL || 'https://picsum.photos/seed/nexus/110/110'}"
+                         alt="${entry.filename || 'object'}">
+                </button>`
             ).join('');
         }
 
         function showDetail(id) {
             const entry = dataset.find(e => e.id === id);
-            if (entry) {
-                alert(`Emotion: ${entry.emotion}\nFile: ${entry.filename}\nID: ${entry.id}`);
-            }
+            if (!entry) return;
+            alert(`Emotion: ${entry.emotion}\nFile: ${entry.filename}\nID: ${entry.id}`);
         }
 
         function showStats() {
             const stats = document.getElementById('stats');
             const counts = {};
-            dataset.forEach(e => counts[e.emotion || 'unknown'] = (counts[e.emotion || 'unknown'] || 0) + 1);
-            stats.innerHTML = `Total: ${dataset.length}<br>${Object.entries(counts).map(([k,v]) => `${k}: ${v}`).join(' | ')}`;
-            stats.style.display = stats.style.display === 'none' ? 'block' : 'none';
+            dataset.forEach(e => {
+                const key = e.emotion || 'unknown';
+                counts[key] = (counts[key] || 0) + 1;
+            });
+            stats.innerHTML = `Total: ${dataset.length}<br>${Object.entries(counts)
+                .map(([k,v]) => `${k}: ${v}`).join(' | ')}`;
+            stats.style.display = (stats.style.display === 'none' || stats.style.display === '') ? 'block' : 'none';
         }
 
         async function downloadDataset() {
@@ -266,16 +332,16 @@
 
         // Event listeners
         document.getElementById('imageInput').addEventListener('change', function() {
-            if (this.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (e) => showPreview(e.target.result, document.getElementById('emotionSelect').value);
-                reader.readAsDataURL(this.files[0]);
-            }
+            if (!this.files[0]) return;
+            const reader = new FileReader();
+            reader.onload = (e) =>
+                showPreview(e.target.result, document.getElementById('emotionSelect').value);
+            reader.readAsDataURL(this.files[0]);
         });
 
-        // Initialize app
+        // Initialise app
         syncDataset();
-        setInterval(syncDataset, 10000); // Auto-refresh every 10s
+        setInterval(syncDataset, 10000);
     </script>
 </body>
 </html>
