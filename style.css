@@ -103,6 +103,15 @@ button:hover {
     transform: translateY(-3px); 
     box-shadow: 0 10px 30px rgba(255,107,107,0.4); 
 }
+.cluster-btn { 
+    background: linear-gradient(45deg, #ffaa00, #ff6b6b) !important; 
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255,170,0,0.7); }
+    70% { box-shadow: 0 0 0 20px rgba(255,170,0,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,170,0,0); }
+}
 
 #preview { 
     margin: 30px 0; 
@@ -137,6 +146,9 @@ button:hover {
     box-shadow: 0 20px 50px rgba(0,0,0,0.6);
     filter: saturate(1.2) contrast(1.2) brightness(1.1);
 }
+#gallery.clustered .thumb {
+    transition: all 1s ease;
+}
 
 .stats { 
     text-align: center; 
@@ -150,9 +162,31 @@ button:hover {
     border: 1px solid rgba(255,255,255,0.1);
 }
 
+.status { 
+    text-align: center; 
+    margin: 10px; 
+    font-weight: 500; 
+}
+.syncing { 
+    color: #ffaa00; 
+    animation: pulse 1.5s infinite; 
+}
+
+#ml-status { 
+    background: rgba(0,255,0,0.1); 
+    border: 1px solid #4ecdc4; 
+    padding: 15px; 
+    border-radius: 10px; 
+    margin: 10px 0; 
+    text-align: center;
+    font-weight: 500;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     body { padding: 15px; }
     .controls { flex-direction: column; align-items: center; }
     button, select { width: 100%; max-width: 280px; }
+    .upload-area { padding: 30px 20px; max-width: 90vw; }
 }
+
