@@ -1,6 +1,6 @@
 # NEXUS: Emotional Objects Clustering
 
-NEXUS is a browser-based artwork that collects images of everyday objects, asks people to label them with one of six basic emotions, and then clusters them using machine learning. The interface visualizes how different viewers emotionally interpret similar objects.
+NEXUS is a browser-based artwork that collects images of everyday objects, asks people to label them with one of six basic emotions, and then clusters them using machine learning. The interface visualises how different viewers emotionally interpret similar objects.
 
 ## Live demo
 
