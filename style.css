@@ -38,7 +38,7 @@ body {
     grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
     gap: 64px;
     align-items: flex-start;
-    margin-bottom: 56px;
+    margin-bottom: 32px;
 }
 
 .hero-left h1 {
@@ -76,16 +76,21 @@ body {
     color: #d3d7f0;
 }
 
+/* STATUS SECTION */
+.status-section {
+    margin-top: 32px;
+}
+
 .status-pill {
     display: inline-flex;
     align-items: center;
-    margin-top: 32px;
     padding: 12px 18px;
     border-radius: 999px;
     border: 1px solid rgba(38, 87, 214, 0.6);
     background: radial-gradient(circle at left, rgba(38, 87, 214, 0.3), transparent 60%);
     font-size: 0.85rem;
     color: #d6dcff;
+    margin-bottom: 16px;
 }
 
 .status-loading {
@@ -96,6 +101,11 @@ body {
     0%   { box-shadow: 0 0 0 0 rgba(38, 87, 214, 0.55); }
     70%  { box-shadow: 0 0 0 14px rgba(38, 87, 214, 0); }
     100% { box-shadow: 0 0 0 0 rgba(38, 87, 214, 0); }
+}
+
+.utility-controls {
+    display: flex;
+    gap: 12px;
 }
 
 /* UPLOAD CARD */
@@ -213,17 +223,11 @@ body {
 .emotion-row select {
     flex: 1;
     min-width: 0;
+    padding-left: 20px; /* Moves arrow more to the left */
+    background-position: 12px center; /* Arrow position adjusted left */
 }
 
 /* BUTTONS / CONTROLS */
-.controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin: 24px 0 40px;
-    justify-content: flex-end;
-}
-
 select,
 button {
     font-family: 'Inter', sans-serif;
@@ -241,6 +245,14 @@ select {
     color: #f5f5ff;
     border: 1px solid rgba(139, 156, 225, 0.6);
     outline: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%237f8bbf' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: 12px center;
+    background-repeat: no-repeat;
+    background-size: 14px;
+    padding-right: 20px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
 }
 
 select:focus {
@@ -260,8 +272,7 @@ select:focus {
 }
 
 .upload-btn {
-    font-size: 1.1rem;
-    padding: 18px 32px !important;
+    /* Font size now matches other buttons - removed larger sizing */
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-weight: 600;
@@ -271,17 +282,6 @@ select:focus {
     opacity: 0.5;
     cursor: default;
     box-shadow: none;
-}
-
-.btn-outline {
-    background: transparent;
-    color: #dbe1ff;
-    border: 1px solid rgba(138, 156, 228, 0.9);
-    text-align: center;
-}
-
-.btn-outline:hover {
-    background: rgba(38, 87, 214, 0.12);
 }
 
 .btn-ghost {
@@ -294,10 +294,47 @@ select:focus {
     background: rgba(18, 26, 68, 1);
 }
 
-.cluster-btn {
+/* PROMINENT CLUSTER HERO BUTTON */
+.cluster-hero-section {
+    margin: 40px 0 48px;
+    text-align: center;
+}
+
+.cluster-hero-btn {
+    font-size: 1.1rem !important;
+    padding: 20px 48px !important;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    font-size: 0.85rem;
+    font-weight: 700 !important;
+    border-radius: 999px !important;
+    background: linear-gradient(145deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57) !important;
+    background-size: 300% 300% !important;
+    animation: gradientShift 4s ease infinite !important;
+    box-shadow: 0 20px 40px rgba(255, 107, 107, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2) !important;
+    border: none !important;
+    color: #1a1a2e !important;
+    font-family: 'Inter', sans-serif !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.cluster-hero-btn:hover {
+    transform: translateY(-4px) scale(1.02) !important;
+    box-shadow: 0 30px 60px rgba(255, 107, 107, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.3) !important;
+    animation-duration: 2s !important;
+}
+
+.cluster-hero-btn:disabled {
+    background: linear-gradient(145deg, #2657d6, #5b7cff) !important;
+    animation: none !important;
+    box-shadow: 0 12px 24px rgba(14, 31, 88, 0.9) !important;
+    color: #f7f8ff !important;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 /* PREVIEW */
@@ -357,7 +394,7 @@ select:focus {
 
 /* GALLERY */
 .gallery-section {
-    margin-top: 24px;
+    margin-top: 72px; /* More spacing above dataset view */
 }
 
 .gallery-header h2 {
@@ -423,8 +460,10 @@ select:focus {
         grid-template-columns: 1fr;
         gap: 48px;
     }
-    .controls {
-        justify-content: flex-start;
+    
+    .utility-controls {
+        flex-direction: column;
+        gap: 8px;
     }
 }
 
@@ -432,17 +471,17 @@ select:focus {
     .page {
         padding: 32px 16px 48px;
     }
+    
     .emotion-row {
         flex-direction: column;
     }
-    .controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .controls button {
-        width: 100%;
-    }
+    
     .hero-right.upload-card {
         padding: 28px 20px;
+    }
+    
+    .cluster-hero-btn {
+        padding: 18px 32px !important;
+        font-size: 1rem !important;
     }
 }
