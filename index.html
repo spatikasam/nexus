@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
     
     <!-- PYODIDE for LIVE ML -->
     <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
@@ -15,46 +16,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-storage-compat.js"></script>
-
-    <style>
-        * { box-sizing: border-box; }
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
-            color: white; margin: 0; padding: 20px; min-height: 100vh;
-            font-weight: 300; letter-spacing: -0.01em; overflow-x: hidden;
-        }
-        .header { text-align: center; margin-bottom: 40px; }
-        .header h1 { 
-            font-size: clamp(2.5em, 8vw, 4em); margin: 0; 
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4); 
-            background-size: 300% 300%; -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; font-weight: 200; letter-spacing: -0.03em;
-            animation: gradientShift 4s ease infinite; filter: drop-shadow(0 0 20px rgba(255,107,107,0.3));
-        }
-        @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-        .header p { font-size: 1.3em; opacity: 0.9; margin-top: 10px; font-weight: 300; max-width: 600px; margin-left: auto; margin-right: auto; }
-        .upload-area { border: 2px dashed #666; padding: 40px; text-align: center; margin: 20px auto; border-radius: 20px; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); max-width: 500px; font-weight: 400; transition: all 0.3s ease; }
-        .upload-area:hover { border-color: #4ecdc4; box-shadow: 0 10px 40px rgba(78,205,196,0.2); }
-        .upload-area label { font-size: 1.4em; font-weight: 500; cursor: pointer; display: block; margin-bottom: 20px; }
-        .controls { display: flex; gap: 15px; justify-content: center; margin: 30px 0; flex-wrap: wrap; }
-        select, button { padding: 14px 28px; border: none; border-radius: 30px; font-size: 16px; font-family: 'Inter', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.3s ease; }
-        select { background: rgba(255,255,255,0.1); color: white; border: 2px solid rgba(255,255,255,0.2); }
-        button { background: linear-gradient(45deg, #ff6b6b, #4ecdc4); color: white; box-shadow: 0 6px 20px rgba(255,107,107,0.3); }
-        button:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(255,107,107,0.4); }
-        .cluster-btn { background: linear-gradient(45deg, #ffaa00, #ff6b6b) !important; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255,170,0,0.7); } 70% { box-shadow: 0 0 0 20px rgba(255,170,0,0); } 100% { box-shadow: 0 0 0 0 rgba(255,170,0,0); } }
-        #preview { margin: 30px 0; text-align: center; }
-        #preview img { max-width: 250px; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
-        #gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; margin-top: 40px; padding: 20px; }
-        .thumb { width: 110px; height: 110px; object-fit: cover; border-radius: 16px; cursor: pointer; transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); border: 2px solid rgba(255,255,255,0.1); filter: saturate(0.8) contrast(1.1); }
-        .thumb:hover { transform: scale(1.12) rotate(3deg) translateY(-10px); border-color: rgba(255,255,255,0.5); box-shadow: 0 20px 50px rgba(0,0,0,0.6); filter: saturate(1.2) contrast(1.2) brightness(1.1); }
-        .stats { text-align: center; margin: 25px 0; font-size: 1.2em; font-weight: 500; background: rgba(255,255,255,0.08); padding: 20px; border-radius: 15px; backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
-        .status { text-align: center; margin: 10px; font-weight: 500; }
-        .syncing { color: #ffaa00; animation: pulse 1.5s infinite; }
-        #ml-status { background: rgba(0,255,0,0.1); border: 1px solid #4ecdc4; padding: 10px; border-radius: 10px; margin: 10px 0; }
-        @media (max-width: 768px) { body { padding: 15px; } .controls { flex-direction: column; align-items: center; } button, select { width: 100%; max-width: 280px; } }
-    </style>
 </head>
 <body>
     <div class="header">
@@ -93,7 +54,7 @@
     <div id="gallery"></div>
 
     <script>
-        // 🔥 REPLACE WITH YOUR FIREBASE CONFIG FROM CONSOLE
+        // 🔥 REPLACE WITH YOUR FIREBASE CONFIG FROM CONSOLE (LINE 28)
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
             authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -114,11 +75,18 @@
         const emotions = ['anger', 'fear', 'disgust', 'happiness', 'sadness', 'surprise'];
         
         function getEmotionColor(emotion) {
-            const colors = { anger: '#ff4444', disgust: '#88ff88', fear: '#4444ff', happiness: '#ffaa00', sadness: '#6666ff', surprise: '#ff44ff' };
+            const colors = { 
+                anger: '#ff4444', 
+                disgust: '#88ff88', 
+                fear: '#4444ff', 
+                happiness: '#ffaa00', 
+                sadness: '#6666ff', 
+                surprise: '#ff44ff' 
+            };
             return colors[emotion] || '#ccc';
         }
 
-        // 🔥 FIREBASE SYNC
+        // 🔥 FIREBASE SYNC - LIVE MULTI-USER DATASET
         async function syncDataset() {
             try {
                 document.getElementById('syncStatus').textContent = '🔄 Syncing...';
@@ -133,12 +101,18 @@
                 
                 if (dataset.length >= 6) document.getElementById('clusterBtn').disabled = false;
             } catch(e) {
-                document.getElementById('syncStatus').textContent = '❌ Firebase error (using demo)';
+                document.getElementById('syncStatus').textContent = '❌ Firebase error (demo mode)';
                 console.error('Firebase sync failed:', e);
+                // Demo data
+                dataset = Array(12).fill().map((_, i) => ({
+                    id: i, emotion: emotions[i%6], filename: `demo_${i}.jpg`,
+                    imageURL: `https://picsum.photos/seed/${i}/110/110`
+                }));
+                updateGallery();
             }
         }
 
-        // 🔥 UPLOAD TO FIREBASE
+        // 🔥 UPLOAD TO FIREBASE + STORAGE
         async function submitEntry() {
             const file = document.getElementById('imageInput').files[0];
             const emotion = document.getElementById('emotionSelect').value;
@@ -150,12 +124,12 @@
             const reader = new FileReader();
             reader.onload = async (e) => {
                 try {
-                    // Upload to Storage
+                    // Upload image to Firebase Storage
                     const storageRef = storage.ref(`nexus/${Date.now()}_${file.name}`);
                     await storageRef.putString(e.target.result.split(',')[1], 'base64');
                     const downloadURL = await storageRef.getDownloadURL();
                     
-                    // Save to Firestore
+                    // Save metadata to Firestore
                     await db.collection('nexus').add({
                         emotion, filename: file.name, imageURL: downloadURL,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -166,13 +140,14 @@
                     document.getElementById('emotionSelect').value = '';
                     syncDataset();
                 } catch(e) {
-                    alert('Upload failed - using local demo');
+                    alert('Upload failed - check Firebase config');
+                    console.error(e);
                 }
             };
             reader.readAsDataURL(file);
         }
 
-        // 🔥 LIVE ML CLUSTERING WITH PYODIDE
+        // 🔥 LIVE ML CLUSTERING WITH PYODIDE (scikit-learn in browser)
         async function initPyodide() {
             if (pyodide) return pyodide;
             document.getElementById('ml-status').innerHTML = '🐍 Loading Python ML...';
@@ -196,10 +171,11 @@
             const py = await initPyodide();
             document.getElementById('ml-status').innerHTML = '🌀 Computing clusters...';
             
-            // Get pixel data
+            // Extract pixel data from images
             const pixelData = await Promise.all(dataset.slice(0, 50).map(async (entry, idx) => {
                 const img = new Image();
-                img.src = entry.imageURL || `https://via.placeholder.com/64?text=${idx}`;
+                img.crossOrigin = 'anonymous';
+                img.src = entry.imageURL || `https://picsum.photos/seed/${idx}/110/110`;
                 await new Promise(r => img.onload = r);
                 
                 const canvas = document.createElement('canvas');
@@ -209,10 +185,13 @@
                 
                 const imageData = ctx.getImageData(0, 0, 64, 64).data;
                 const gray = [];
-                for (let i = 0; i < imageData.length; i += 4) gray.push(imageData[i] * 0.3 + imageData[i+1] * 0.59 + imageData[i+2] * 0.11);
+                for (let i = 0; i < imageData.length; i += 4) {
+                    gray.push(imageData[i] * 0.3 + imageData[i+1] * 0.59 + imageData[i+2] * 0.11);
+                }
                 return gray;
             }));
             
+            // RUN scikit-learn KMeans + PCA
             const result = await py.runPythonAsync(`
                 X = np.array(${JSON.stringify(pixelData)})
                 X = X.reshape(-1, 4096)
@@ -227,9 +206,9 @@
                 {'clusters': clusters.tolist()}
             `);
             
-            // Animate results
-            result.clusters.toString().split(',').forEach((clusterStr, i) => {
-                const cluster = parseInt(clusterStr);
+            // Animate ML results
+            const clusters = result.clusters.toJs();
+            clusters.forEach((cluster, i) => {
                 const thumbs = document.querySelectorAll('.thumb');
                 if (thumbs[i]) {
                     const emotion = emotions[cluster];
@@ -251,22 +230,24 @@
         function updateGallery() {
             const gallery = document.getElementById('gallery');
             gallery.innerHTML = dataset.map(entry => 
-                `<img src="${entry.imageURL || 'https://via.placeholder.com/110?text=?'}"
+                `<img src="${entry.imageURL || 'https://picsum.photos/seed/nexus/110/110'}"
                       class="thumb" 
-                      title="${entry.emotion} - ${entry.filename || 'unknown'}"
+                      title="${entry.emotion || 'unknown'} - ${entry.filename || 'demo'}"
                       onclick="showDetail('${entry.id}')">`
             ).join('');
         }
 
         function showDetail(id) {
             const entry = dataset.find(e => e.id === id);
-            if (entry) alert(`Emotion: ${entry.emotion}\nFile: ${entry.filename}\nID: ${entry.id}`);
+            if (entry) {
+                alert(`Emotion: ${entry.emotion}\nFile: ${entry.filename}\nID: ${entry.id}`);
+            }
         }
 
         function showStats() {
             const stats = document.getElementById('stats');
             const counts = {};
-            dataset.forEach(e => counts[e.emotion] = (counts[e.emotion] || 0) + 1);
+            dataset.forEach(e => counts[e.emotion || 'unknown'] = (counts[e.emotion || 'unknown'] || 0) + 1);
             stats.innerHTML = `Total: ${dataset.length}<br>${Object.entries(counts).map(([k,v]) => `${k}: ${v}`).join(' | ')}`;
             stats.style.display = stats.style.display === 'none' ? 'block' : 'none';
         }
@@ -282,7 +263,7 @@
             a.click();
         }
 
-        // Initialize
+        // Event listeners
         document.getElementById('imageInput').addEventListener('change', function() {
             if (this.files[0]) {
                 const reader = new FileReader();
@@ -291,8 +272,9 @@
             }
         });
 
+        // Initialize app
         syncDataset();
-        setInterval(syncDataset, 10000); // Refresh every 10s
+        setInterval(syncDataset, 10000); // Auto-refresh every 10s
     </script>
 </body>
 </html>
