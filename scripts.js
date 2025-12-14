@@ -23,36 +23,55 @@ const storage = firebase.storage();
 // UTILITY FUNCTIONS
 function getEmotionColor(emotion) {
     const colors = { 
-        anger: '#ff4b5c', disgust: '#46c37b', fear: '#6b5bff',
-        happiness: '#ffd166', sadness: '#4d7cff', surprise: '#ff66c4' 
+        anger: '#ff4b5c',
+        disgust: '#46c37b',
+        fear: '#6b5bff',
+        happiness: '#ffd166',
+        sadness: '#4d7cff',
+        surprise: '#ff66c4' 
     };
     return colors[emotion] || '#2657d6';
 }
 
-// DRAG & DROP UPLOAD
+// DRAG & DROP + INPUT UPLOAD
+let uploadArea, imageInput, emotionSelect, uploadBtn;
+
 document.addEventListener('DOMContentLoaded', () => {
-    const uploadArea = document.getElementById('uploadArea');
-    const imageInput = document.getElementById('imageInput');
-    
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, preventDefaults, false);
-    });
-    
-    ['dragenter', 'dragover'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, () => uploadArea.classList.add('drag-highlight'), false);
-    });
-    
-    ['dragleave', 'drop'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('drag-highlight'), false);
-    });
-    
-    uploadArea.addEventListener('drop', handleDrop, false);
-    imageInput.addEventListener('change', handleFileSelect);
-    
-    // Enable upload button when emotion selected
-    document.getElementById('emotionSelect').addEventListener('change', (e) => {
-        document.getElementById('uploadBtn').disabled = !e.target.value;
-    });
+    uploadArea = document.getElementById('uploadArea');
+    imageInput = document.getElementById('imageInput');
+    emotionSelect = document.getElementById('emotionSelect');
+    uploadBtn = document.getElementById('uploadBtn');
+
+    if (!uploadArea || !imageInput || !emotionSelect || !uploadBtn) {
+        // Probably on visualisation.html
+        if (!window.location.pathname.includes('visualisation.html')) {
+            console.warn('Upload elements not found on this page.');
+        }
+    } else {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.add('drag-highlight'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('drag-highlight'), false);
+        });
+
+        uploadArea.addEventListener('drop', handleDrop, false);
+        imageInput.addEventListener('change', handleFileSelect);
+        emotionSelect.addEventListener('change', updateUploadButtonState);
+    }
+
+    // Initialise dataset and (maybe) clustering
+    if (window.location.pathname.includes('visualisation.html')) {
+        syncDataset().then(runClustering);
+    } else {
+        syncDataset();
+        setInterval(syncDataset, 10000);
+    }
 });
 
 function preventDefaults(e) {
@@ -63,25 +82,39 @@ function preventDefaults(e) {
 function handleDrop(e) {
     const dt = e.dataTransfer;
     const files = dt.files;
+    // Set the file onto the hidden input so submitEntry() can read it
+    if (files && files.length > 0 && imageInput) {
+        imageInput.files = files;
+    }
     handleFiles(files);
 }
 
 function handleFileSelect() {
+    if (!imageInput) return;
     handleFiles(imageInput.files);
 }
 
 function handleFiles(files) {
+    if (!files || files.length === 0) return;
+
     const file = Array.from(files).find(f => f.type.startsWith('image/'));
     if (file && file.size <= 10 * 1024 * 1024) {
         const reader = new FileReader();
         reader.onload = (e) => {
-            showPreview(e.target.result, document.getElementById('emotionSelect').value);
-            document.getElementById('uploadBtn').disabled = !document.getElementById('emotionSelect').value;
+            showPreview(e.target.result, emotionSelect ? emotionSelect.value : '');
+            updateUploadButtonState();
         };
         reader.readAsDataURL(file);
     } else if (file && file.size > 10 * 1024 * 1024) {
         alert('File too large. Maximum 10MB.');
     }
+}
+
+function updateUploadButtonState() {
+    if (!uploadBtn || !imageInput || !emotionSelect) return;
+    const hasFile = imageInput.files && imageInput.files.length > 0;
+    const hasEmotion = !!emotionSelect.value;
+    uploadBtn.disabled = !(hasFile && hasEmotion);
 }
 
 // DATA SYNC
@@ -104,9 +137,12 @@ async function syncDataset() {
         statusEl.classList.remove('status-loading');
         
     } catch (e) {
+        console.error('Sync failed, using demo data', e);
         statusEl.textContent = 'Demo mode';
         dataset = Array(12).fill().map((_, i) => ({
-            id: i, emotion: emotions[i % 6], filename: `demo_${i}.jpg`,
+            id: i,
+            emotion: emotions[i % 6],
+            filename: `demo_${i}.jpg`,
             imageURL: `https://picsum.photos/seed/${i}/110/110`
         }));
         updateGallery();
@@ -115,17 +151,24 @@ async function syncDataset() {
 
 // UPLOAD
 async function submitEntry() {
-    const file = document.getElementById('imageInput').files[0];
-    const emotion = document.getElementById('emotionSelect').value;
+    const statusEl = document.getElementById('syncStatus');
+    if (!imageInput || !emotionSelect) {
+        alert('Upload elements not found on this page.');
+        return;
+    }
+
+    const file = imageInput.files[0];
+    const emotion = emotionSelect.value;
     
     if (!file || !emotion) {
         alert('Select image and emotion.');
         return;
     }
-    
-    const statusEl = document.getElementById('syncStatus');
-    statusEl.textContent = 'Uploading…';
-    statusEl.classList.add('status-loading');
+
+    if (statusEl) {
+        statusEl.textContent = 'Uploading…';
+        statusEl.classList.add('status-loading');
+    }
     
     const reader = new FileReader();
     reader.onload = async (e) => {
@@ -136,21 +179,24 @@ async function submitEntry() {
             const downloadURL = await storageRef.getDownloadURL();
             
             await db.collection('nexus').add({
-                emotion, filename: file.name, imageURL: downloadURL,
+                emotion,
+                filename: file.name,
+                imageURL: downloadURL,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
             
-            document.getElementById('imageInput').value = '';
-            document.getElementById('emotionSelect').value = '';
-            document.getElementById('uploadBtn').disabled = true;
-            document.getElementById('preview').innerHTML = '';
+            imageInput.value = '';
+            emotionSelect.value = '';
+            if (uploadBtn) uploadBtn.disabled = true;
+            const previewEl = document.getElementById('preview');
+            if (previewEl) previewEl.innerHTML = '';
             
             await syncDataset();
         } catch (err) {
             alert('Upload failed.');
             console.error(err);
         } finally {
-            statusEl.classList.remove('status-loading');
+            if (statusEl) statusEl.classList.remove('status-loading');
         }
     };
     reader.readAsDataURL(file);
@@ -158,7 +204,10 @@ async function submitEntry() {
 
 // PREVIEW
 function showPreview(imageSrc, emotion) {
-    document.getElementById('preview').innerHTML = `
+    const previewEl = document.getElementById('preview');
+    if (!previewEl) return;
+
+    previewEl.innerHTML = `
         <div class="preview-frame">
             <img src="${imageSrc}" alt="preview">
             <div class="preview-label">${emotion || 'pending'}</div>
@@ -169,6 +218,7 @@ function showPreview(imageSrc, emotion) {
 // GALLERY
 function updateGallery() {
     const gallery = document.getElementById('gallery');
+    const desc = document.getElementById('galleryDesc');
     if (!gallery) return;
     
     gallery.innerHTML = dataset.map(entry => 
@@ -177,8 +227,10 @@ function updateGallery() {
         </button>`
     ).join('');
     
-    document.getElementById('galleryDesc').innerHTML = 
-        `Live dataset (${dataset.length} objects). <a href="visualize.html" class="link">View ML analysis →</a>`;
+    if (desc) {
+        desc.innerHTML = 
+            `Live dataset (${dataset.length} objects). <a href="visualisation.html" class="link">View ML analysis →</a>`;
+    }
 }
 
 // UTILITIES
@@ -192,7 +244,7 @@ function downloadDataset() {
     a.click();
 }
 
-// PYODIDE (for visualize.html)
+// PYODIDE (for visualisation.html)
 async function initPyodide() {
     if (pyodide) return pyodide;
     
@@ -210,14 +262,20 @@ async function initPyodide() {
     return pyodide;
 }
 
-// CLUSTERING (for visualize.html)
+// CLUSTERING (for visualisation.html)
 async function runClustering() {
+    if (!dataset.length) {
+        const mlStatus = document.getElementById('mlStatus');
+        if (mlStatus) mlStatus.textContent = 'No data to analyse yet.';
+        return;
+    }
+
     const py = await initPyodide();
     const mlStatus = document.getElementById('mlStatus');
     if (mlStatus) mlStatus.textContent = 'Computing visual clusters…';
     
-    // Extract pixel data
-    const pixelData = await Promise.all(dataset.slice(0, 50).map(async (entry, idx) => {
+    const subset = dataset.slice(0, 50);
+    const pixelData = await Promise.all(subset.map(async (entry, idx) => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.src = entry.imageURL || `https://picsum.photos/seed/${idx}/110/110`;
@@ -236,14 +294,18 @@ async function runClustering() {
         return rgb;
     }));
     
+    const humanEmotions = subset.map(d => d.emotion || null);
+
     const result = await py.runPythonAsync(`
         import numpy as np
+        from sklearn.cluster import KMeans
+
         X = np.array(${JSON.stringify(pixelData)}).reshape(-1, 12288).astype(float) / 255.0
-        
+
         kmeans = KMeans(n_clusters=6, random_state=42, n_init=10, max_iter=100)
         clusters = kmeans.fit_predict(X)
-        
-        human_emotions = ${JSON.stringify(dataset.slice(0,50).map(d => d.emotion))}
+
+        human_emotions = ${JSON.stringify(humanEmotions)}
         disagreement = []
         for c in range(6):
             cluster_emotions = [human_emotions[i] for i in range(len(human_emotions)) if clusters[i] == c]
@@ -252,7 +314,7 @@ async function runClustering() {
                 disagreement.append(unique_emotions / 6.0)
             else:
                 disagreement.append(0)
-        
+
         {"clusters": clusters.tolist(), "disagreement": disagreement}
     `);
     
@@ -261,42 +323,53 @@ async function runClustering() {
     showClusterView();
 }
 
-// VISUALIZE PAGE FUNCTIONS
+// VISUALISE PAGE FUNCTIONS
 function showClusterView() {
     const statsEl = document.getElementById('clusterStats');
     const galleryEl = document.getElementById('clusterGallery');
-    
+    if (!statsEl || !galleryEl) return;
+
     statsEl.innerHTML = `
         <div class="section-label small">CLUSTER ANALYSIS</div>
         <h2>6 Visual Clusters (${dataset.length} objects)</h2>
         <div class="cluster-previews">
-            ${currentClusters.slice(0,6).map((c,i) => `
+            ${[0,1,2,3,4,5].map(i => `
                 <div class="cluster-preview" onclick="zoomCluster(${i})">
                     <div class="cluster-glow" style="
-                        box-shadow: 0 0 ${20 + 20*clusterDisagreement[i]}px 
-                        rgba(255,255,255,${0.2 + 0.3*clusterDisagreement[i]});
+                        box-shadow: 0 0 ${20 + 20 * (clusterDisagreement[i] || 0)}px 
+                        rgba(255,255,255,${0.2 + 0.3 * (clusterDisagreement[i] || 0)});
                     "></div>
                     <div>Cluster ${i}</div>
-                    <div class="cluster-score">${(clusterDisagreement[i]*100).toFixed(0)}% chaos</div>
+                    <div class="cluster-score">${((clusterDisagreement[i] || 0) * 100).toFixed(0)}% chaos</div>
                 </div>
             `).join('')}
         </div>
     `;
     
-    document.getElementById('mlStatus').textContent = 
-        `Analysis complete. Max disagreement: ${(Math.max(...clusterDisagreement)*100).toFixed(0)}%`;
+    const mlStatus = document.getElementById('mlStatus');
+    if (mlStatus) {
+        const maxDis = Math.max(...clusterDisagreement);
+        mlStatus.textContent = `Analysis complete. Max disagreement: ${(maxDis * 100).toFixed(0)}%`;
+    }
+
+    // Clear gallery (it will be filled on zoom)
+    galleryEl.innerHTML = '';
 }
 
 function zoomCluster(clusterId) {
-    const clusterImages = dataset.slice(0,50)
+    const galleryEl = document.getElementById('clusterGallery');
+    if (!galleryEl) return;
+
+    const subset = dataset.slice(0, 50);
+    const clusterImages = subset
         .map((entry, i) => ({...entry, cluster: currentClusters[i]}))
         .filter(entry => entry.cluster === clusterId);
     
-    document.getElementById('clusterGallery').innerHTML = `
+    galleryEl.innerHTML = `
         <div class="cluster-detail" style="grid-column: 1 / -1;">
             <button onclick="showClusterView()" class="btn-ghost">← All clusters</button>
-            <h3>Cluster ${clusterId} - ${(clusterDisagreement[clusterId]*100).toFixed(0)}% disagreement</h3>
-            <p>Visually identical objects, wildly different emotions:</p>
+            <h3>Cluster ${clusterId} - ${((clusterDisagreement[clusterId] || 0) * 100).toFixed(0)}% disagreement</h3>
+            <p>Visually similar objects, different reported emotions:</p>
             <div class="emotion-breakdown">
                 ${clusterImages.map(img => 
                     `<span class="emotion-tag">${img.emotion || 'unknown'}</span>`
@@ -310,12 +383,4 @@ function zoomCluster(clusterId) {
             </button>
         `).join('')}
     `;
-}
-
-// INIT
-if (window.location.pathname.includes('visualize.html')) {
-    syncDataset().then(runClustering);
-} else {
-    syncDataset();
-    setInterval(syncDataset, 10000);
 }
