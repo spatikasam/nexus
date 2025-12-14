@@ -97,14 +97,28 @@ body {
     border: 1px solid rgba(67, 82, 142, 0.5);
     padding: 14px 16px;
     transition: all 0.25s ease;
+    /* Make it look static */
+    opacity: 0.85;
+    cursor: default; /* No pointer cursor */
 }
 
 .prompt-item:hover {
-    background: rgba(38, 87, 214, 0.18);
-    border-color: rgba(38, 87, 214, 0.6);
-    transform: translateY(-2px);
+    /* Reduced hover effect - just a subtle glow, no movement */
+    background: rgba(38, 87, 214, 0.12);
+    border-color: rgba(38, 87, 214, 0.4);
+    opacity: 1;
+    /* No transform - stays put */
+    box-shadow: 0 4px 16px rgba(38, 87, 214, 0.15);
 }
 
+.prompt-item::before {
+    content: '💡';
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 0.75rem;
+    opacity: 0.6;
+}
 /* Layout inside card */
 .prompt-header {
     display: flex;
