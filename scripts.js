@@ -179,17 +179,7 @@ async function submitEntry() {
         showUploadProgress('Uploading to cloud...', 30);
         const storageRef = storage.ref(`nexus/${Date.now()}_${file.name}`);
         const uploadTask = storageRef.putString(base64Data, 'base64');
-             // Real-time upload progress
-     uploadTask.on('state_changed',
-       (snapshot) => {
-         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 60; // 30-90%
-         showUploadProgress('Uploading...', 30 + progress);
-       }
-     );
-
-
-        // Real-time upload progress
-await uploadTask.then(
+             ask.then(
      async () => {
        // 3. Get download URL
        showUploadProgress('Finalizing...', 95);
