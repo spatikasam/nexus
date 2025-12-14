@@ -60,50 +60,80 @@
                         </div>
                     </div>
 
+                    <!-- QUICK IDEAS -->
                     <div class="emotion-prompts">
                         <div class="section-label small">QUICK IDEAS</div>
                         <div class="prompt-grid">
                             <div class="prompt-item">
-                                <div class="emotion-icon">
-                                    <img src="assets/anger.png" alt="Anger" class="emotion-img">
+                                <div class="prompt-header">
+                                    <div class="emotion-icon">
+                                        <img src="assets/anger.png" alt="Anger" class="emotion-img">
+                                    </div>
+                                    <div>
+                                        <div class="emotion-label">ANGER</div>
+                                        <div class="prompt-text">rusted nail, sharp knife</div>
+                                    </div>
                                 </div>
-                                <div class="emotion-label">Anger</div>
-                                <div class="prompt-text">rusted nail, sharp knife</div>
                             </div>
+
                             <div class="prompt-item">
-                                <div class="emotion-icon">
-                                    <img src="assets/disgust.png" alt="Disgust" class="emotion-img">
+                                <div class="prompt-header">
+                                    <div class="emotion-icon">
+                                        <img src="assets/disgust.png" alt="Disgust" class="emotion-img">
+                                    </div>
+                                    <div>
+                                        <div class="emotion-label">DISGUST</div>
+                                        <div class="prompt-text">moldy bread, sticky wrapper</div>
+                                    </div>
                                 </div>
-                                <div class="emotion-label">Disgust</div>
-                                <div class="prompt-text">moldy bread, sticky wrapper</div>
                             </div>
+
                             <div class="prompt-item">
-                                <div class="emotion-icon">
-                                    <img src="assets/fear.png" alt="Fear" class="emotion-img">
+                                <div class="prompt-header">
+                                    <div class="emotion-icon">
+                                        <img src="assets/fear.png" alt="Fear" class="emotion-img">
+                                    </div>
+                                    <div>
+                                        <div class="emotion-label">FEAR</div>
+                                        <div class="prompt-text">old doll, tangled wires</div>
+                                    </div>
                                 </div>
-                                <div class="emotion-label">Fear</div>
-                                <div class="prompt-text">old doll, tangled wires</div>
                             </div>
+
                             <div class="prompt-item">
-                                <div class="emotion-icon">
-                                    <img src="assets/happy.png" alt="Happy" class="emotion-img">
+                                <div class="prompt-header">
+                                    <div class="emotion-icon">
+                                        <img src="assets/happy.png" alt="Happy" class="emotion-img">
+                                    </div>
+                                    <div>
+                                        <div class="emotion-label">HAPPY</div>
+                                        <div class="prompt-text">childhood toy, favorite mug</div>
+                                    </div>
                                 </div>
-                                <div class="emotion-label">Happy</div>
-                                <div class="prompt-text">childhood toy, favorite mug</div>
                             </div>
+
                             <div class="prompt-item">
-                                <div class="emotion-icon">
-                                    <img src="assets/sad.png" alt="Sad" class="emotion-img">
+                                <div class="prompt-header">
+                                    <div class="emotion-icon">
+                                        <img src="assets/sad.png" alt="Sad" class="emotion-img">
+                                    </div>
+                                    <div>
+                                        <div class="emotion-label">SAD</div>
+                                        <div class="prompt-text">wilted plant, chipped plate</div>
+                                    </div>
                                 </div>
-                                <div class="emotion-label">Sad</div>
-                                <div class="prompt-text">wilted plant, chipped plate</div>
                             </div>
+
                             <div class="prompt-item">
-                                <div class="emotion-icon">
-                                    <img src="assets/surprise.png" alt="Surprise" class="emotion-img">
+                                <div class="prompt-header">
+                                    <div class="emotion-icon">
+                                        <img src="assets/surprise.png" alt="Surprise" class="emotion-img">
+                                    </div>
+                                    <div>
+                                        <div class="emotion-label">SURPRISE</div>
+                                        <div class="prompt-text">odd rock, mystery box</div>
+                                    </div>
                                 </div>
-                                <div class="emotion-label">Surprise</div>
-                                <div class="prompt-text">odd rock, mystery box</div>
                             </div>
                         </div>
                     </div>
@@ -141,5 +171,32 @@
 
                 <div id="preview" class="preview"></div>
             </div>
+        </header>
 
-            <!-- MOVED HERE
+        <!-- STATUS + CONTROLS BELOW WHITE BOX -->
+        <section class="status-section hero-status">
+            <div class="status-pill" id="syncStatus">0 objects</div>
+            <div class="utility-controls">
+                <button class="btn-ghost" onclick="downloadDataset()">Export dataset</button>
+                <a href="visualisation.html" class="btn-ghost">View analysis →</a>
+            </div>
+        </section>
+
+        <!-- GALLERY -->
+        <section class="gallery-section">
+            <div class="gallery-header">
+                <div class="section-label small">LIVE DATASET</div>
+                <h2>Global object field</h2>
+                <p id="galleryDesc">
+                    Upload objects to build the dataset.
+                    Click <a href="visualisation.html" class="link">View analysis</a> for ML clustering.
+                </p>
+            </div>
+            <div id="gallery" class="gallery"></div>
+        </section>
+    </main>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
+
