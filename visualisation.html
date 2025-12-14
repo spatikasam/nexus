@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS Analysis - What We Feel vs What We See</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+</head>
+<body class="viz-page">
+    <main class="page">
+        <header class="viz-header">
+            <a href="index.html" class="back-btn">← Contribute</a>
+            <h1>NEXUS Analysis</h1>
+            <div class="status-pill" id="mlStatus">Loading dataset…</div>
+        </header>
+
+        <section class="cluster-section">
+            <div class="cluster-stats" id="clusterStats"></div>
+            <div class="gallery" id="clusterGallery"></div>
+        </section>
+
+        <section class="viz-info">
+            <h3>How to read</h3>
+            <ul>
+                <li><strong>Neutral borders</strong> = same visual cluster (machine perception)</li>
+                <li><strong>Glow brightness</strong> = human disagreement (bright = emotional chaos)</li>
+                <li><strong>Click cluster</strong> = zoom to see conflicting emotions</li>
+            </ul>
+        </section>
+    </main>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
