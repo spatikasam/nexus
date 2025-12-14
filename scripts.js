@@ -123,11 +123,14 @@ function handleFiles(files) {
 function updatePreview(imageSrc) {
     if (!previewEl) return;
     
-    const currentEmotion = emotionSelect.value || 'Select emotion';
+    const currentEmotion = emotionSelect.value;
+    const needsEmotion = !currentEmotion;
     previewEl.innerHTML = `
         <div class="preview-frame">
             <img src="${imageSrc}" alt="preview">
-            <div class="preview-label">${currentEmotion}</div>
+            <div class="preview-label ${needsEmotion ? 'needs-selection' : ''}">
+                ${needsEmotion ? '↑ Choose emotion above ↑' : currentEmotion}
+            </div>
         </div>
     `;
 }

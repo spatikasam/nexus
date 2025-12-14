@@ -411,6 +411,36 @@ body {
     background: rgba(0,0,0,0.8); color: white;
     padding: 8px 16px; border-radius: 20px; margin-top: 12px;
     display: inline-block; font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.preview-label.needs-selection {
+    background: linear-gradient(135deg, #2657d6, #4d7cff);
+    animation: pulse 1.5s ease-in-out infinite;
+    font-weight: 600;
+    padding: 10px 20px;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 4px 12px rgba(38, 87, 214, 0.3); }
+    50% { transform: scale(1.05); box-shadow: 0 6px 20px rgba(38, 87, 214, 0.5); }
+}
+
+.emotion-select {
+    flex: 1;
+    font-size: 1rem;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid rgba(38, 87, 214, 0.2);
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.emotion-select:focus {
+    outline: none;
+    border-color: #2657d6;
+    box-shadow: 0 0 0 3px rgba(38, 87, 214, 0.1);
 }
 
 /* GALLERY */
