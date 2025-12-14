@@ -18,6 +18,7 @@
     <main class="page">
         <!-- HERO -->
         <header class="hero">
+            <!-- LEFT COLUMN -->
             <div class="hero-left">
                 <h1 class="visually-hidden">NEXUS</h1>
                 <img src="assets/nexus.png" alt="NEXUS logo" class="hero-logo">
@@ -137,10 +138,19 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- STATUS + CONTROLS kept with left column to balance height -->
+                    <div class="status-section" style="margin-top: 28px;">
+                        <div class="status-pill" id="syncStatus">0 objects</div>
+                        <div class="utility-controls">
+                            <button class="btn-ghost" onclick="downloadDataset()">Export dataset</button>
+                            <a href="visualisation.html" class="btn-ghost">View analysis →</a>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- UPLOAD -->
+            <!-- RIGHT COLUMN -->
             <div class="hero-right upload-card">
                 <div class="section-label small">ADD TO NEXUS</div>
                 <h2>Contribute to the Dataset</h2>
@@ -173,15 +183,6 @@
             </div>
         </header>
 
-        <!-- STATUS + CONTROLS BELOW WHITE BOX -->
-        <section class="status-section hero-status">
-            <div class="status-pill" id="syncStatus">0 objects</div>
-            <div class="utility-controls">
-                <button class="btn-ghost" onclick="downloadDataset()">Export dataset</button>
-                <a href="visualisation.html" class="btn-ghost">View analysis →</a>
-            </div>
-        </section>
-
         <!-- GALLERY -->
         <section class="gallery-section">
             <div class="gallery-header">
@@ -199,4 +200,3 @@
     <script src="scripts.js"></script>
 </body>
 </html>
-
