@@ -60,13 +60,18 @@ body {
 
 .step { display: flex; gap: 20px; align-items: flex-start; }
 
+/* WHITE CIRCLE NUMBERING FOR INSTRUCTIONS */
 .step-number {
     width: 44px; height: 44px; border-radius: 50%;
-    background: linear-gradient(145deg, #2657d6, #5b7cff); color: white;
+    background: rgba(255,255,255,0.95); /* White background */
+    color: #1a1a2e !important; /* Black text */
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem; font-weight: 600; flex-shrink: 0;
-    box-shadow: 0 8px 20px rgba(38, 87, 214, 0.3);
+    font-size: 1.1rem; font-weight: 700; /* Bold black number */
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.8);
+    border: 2px solid rgba(255,255,255,0.6);
 }
+
 
 .step-content h3 {
     margin: 0 0 8px; font-size: 1rem; font-weight: 500; color: #f4f6ff;
