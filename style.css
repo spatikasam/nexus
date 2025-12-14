@@ -61,10 +61,10 @@ body {
 /* WHITE CIRCLE NUMBERING FOR INSTRUCTIONS */
 .step-number {
     width: 44px; height: 44px; border-radius: 50%;
-    background: rgba(255,255,255,0.95); /* White background */
-    color: #1a1a2e !important; /* Black text */
+    background: rgba(255,255,255,0.95);
+    color: #1a1a2e !important;
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem; font-weight: 700; /* Bold black number */
+    font-size: 1.1rem; font-weight: 700;
     flex-shrink: 0;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.8);
     border: 2px solid rgba(255,255,255,0.6);
@@ -78,6 +78,7 @@ body {
     margin: 0; font-size: 0.95rem; color: #c4caea; line-height: 1.55;
 }
 
+/* QUICK IDEAS */
 .emotion-prompts { 
     margin-top: 32px; 
 }
@@ -111,7 +112,7 @@ body {
     gap: 12px;
 }
 
-/* Icon */
+/* Icon for QUICK IDEAS */
 .emotion-icon {
     width: 40px;
     height: 40px;
@@ -125,8 +126,8 @@ body {
     display: block;
 }
 
-/* Text */
-.emotion-label {
+/* Text inside QUICK IDEAS cards */
+.prompt-emotion-label {
     font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.12em;
@@ -141,17 +142,7 @@ body {
     line-height: 1.35;
 }
 
-/* CLEAN PNG EMOTION ICONS - 36x36 RESIZED */
-.emotion-icon {
-    width: 36px;
-    height: 36px;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    margin: 0 auto;
-}
-
-/* EMOTION BUTTONS - TRANSPARENT BACKGROUND */
+/* EMOTION BUTTONS (if used elsewhere) */
 .emotion-btn {
     display: flex;
     flex-direction: column;
@@ -176,48 +167,21 @@ body {
     background: rgba(255,255,255,0.15);
 }
 
-/* EMOTION TEXT COLORS */
-.emotion-label {
+/* Label inside emotion buttons */
+.emotion-btn-label {
     font-weight: 600;
     font-size: 14px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-/* Anger - Red */
-.emotion-btn[data-emotion="anger"] .emotion-label { 
-    color: #D32F2F; 
-}
-
-/* Disgust - Green */
-.emotion-btn[data-emotion="disgust"] .emotion-label { 
-    color: #43A047; 
-}
-
-/* Fear - Purple */
-.emotion-btn[data-emotion="fear"] .emotion-label { 
-    color: #8E24AA; 
-}
-
-/* Happy - Yellow */
-.emotion-btn[data-emotion="happy"] .emotion-label { 
-    color: #FFD600; 
-}
-
-/* Sad - Blue */
-.emotion-btn[data-emotion="sad"] .emotion-label { 
-    color: #2979FF; 
-}
-
-/* Surprise - Pink */
-.emotion-btn[data-emotion="surprise"] .emotion-label { 
-    color: #F06292; 
-}
-
-.prompt-text {
-    color: #c4caea; font-size: 0.85rem; line-height: 1.4;
-    margin-top: 2px;
-}
+/* Emotion button colors */
+.emotion-btn[data-emotion="anger"] .emotion-btn-label { color: #D32F2F; }
+.emotion-btn[data-emotion="disgust"] .emotion-btn-label { color: #43A047; }
+.emotion-btn[data-emotion="fear"] .emotion-btn-label { color: #8E24AA; }
+.emotion-btn[data-emotion="happy"] .emotion-btn-label { color: #FFD600; }
+.emotion-btn[data-emotion="sad"] .emotion-btn-label { color: #2979FF; }
+.emotion-btn[data-emotion="surprise"] .emotion-btn-label { color: #F06292; }
 
 /* STATUS */
 .status-section { margin-top: 32px; }
@@ -318,7 +282,7 @@ body {
     border-radius: 12px; margin-top: 20px;
 }
 
-/* BEAUTIFUL EMOTION DROPDOWN */
+/* EMOTION DROPDOWN */
 .hero-right.upload-card select#emotionSelect {
     flex: 1;
     background: white;
