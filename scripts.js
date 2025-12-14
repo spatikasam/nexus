@@ -159,6 +159,51 @@ function updateUploadButtonState() {
     uploadBtn.disabled = !(hasFile && hasEmotion);
 }
 
+// IMAGE COMPRESSION HELPERS
+function compressImage(file, maxWidth = 800, quality = 0.85) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                
+                // Resize if width exceeds maxWidth
+                if (width > maxWidth) {
+                    height = (height * maxWidth) / width;
+                    width = maxWidth;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Convert to blob with compression
+                canvas.toBlob((blob) => {
+                    resolve(blob);
+                }, 'image/jpeg', quality);
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+
 // UPLOAD FUNCTION WITH PROGRESS OVERLAY
 async function submitEntry() {
     showUploadProgress('Preparing your object...', 10);
@@ -173,25 +218,25 @@ async function submitEntry() {
     }
 
     try {
-        // 1. Convert to blob for upload
-        showUploadProgress('Converting image...', 20);
-        const base64Data = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result.split(',')[1]);
-            reader.readAsDataURL(file);
-        });
+        // 1. Compress and resize image to save storage
+        showUploadProgress('Optimizing image...', 20);
+        const compressedBlob = await compressImage(file, 800, 0.85);
+        
+        // 2. Convert to base64 for upload
+        showUploadProgress('Converting image...', 40);
+        const base64Data = await blobToBase64(compressedBlob);
 
-        // 2. Upload to Firebase Storage with real progress
-        showUploadProgress('Uploading to cloud...', 30);
+        // 3. Upload to Firebase Storage
+        showUploadProgress('Uploading to cloud...', 50);
         const storageRef = storage.ref(`nexus/${Date.now()}_${file.name}`);
         const uploadTask = storageRef.putString(base64Data, 'base64');
         await uploadTask.then(
             async () => {
-                // 3. Get download URL
+                // 4. Get download URL
                 showUploadProgress('Finalizing...', 95);
                 const downloadURL = await storageRef.getDownloadURL();
                 
-                // 4. Save to Firestore
+                // 5. Save to Firestore
                 await db.collection('nexus').add({
                     emotion: emotion,
                     filename: file.name,
@@ -199,7 +244,7 @@ async function submitEntry() {
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
-                // 5. Success!
+                // 6. Success!
                 showUploadProgress('Success! Added to dataset.', 100);
                 await new Promise(r => setTimeout(r, 1200));
                 
