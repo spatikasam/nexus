@@ -9,10 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     
-    <!-- PYODIDE for LIVE ML -->
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
-    
-    <!-- FIREBASE -->
+    <!-- FIREBASE ONLY (Pyodide loaded on visualisation.html only) -->
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-storage-compat.js"></script>
@@ -23,7 +20,7 @@
         <header class="hero">
             <div class="hero-left">
                 <h1 class="visually-hidden">NEXUS</h1>
-                <img src="assets/nexus.png" alt="NEXUS logo" class="hero-logo">
+                <img src="https://via.placeholder.com/360x200/1e1e2b/7f8bbf?text=NEXUS" alt="NEXUS logo" class="hero-logo">
                 
                 <!-- INSTRUCTIONS -->
                 <div class="instructions-section">
@@ -103,7 +100,7 @@
                     <div class="status-pill" id="syncStatus">Initialising…</div>
                     <div class="utility-controls">
                         <button class="btn-ghost" onclick="downloadDataset()">Export dataset</button>
-                        <a href="visualize.html" class="btn-ghost">View analysis →</a>
+                        <a href="visualisation.html" class="btn-ghost">View analysis →</a>
                     </div>
                 </div>
             </div>
@@ -146,7 +143,7 @@
             <div class="gallery-header">
                 <div class="section-label small">LIVE DATASET</div>
                 <h2>Global object field</h2>
-                <p id="galleryDesc">Upload objects to build the dataset. Click <a href="visualize.html" class="link">View analysis</a> for ML clustering.</p>
+                <p id="galleryDesc">Upload objects to build the dataset. Click <a href="visualisation.html" class="link">View analysis</a> for ML clustering.</p>
             </div>
             <div id="gallery" class="gallery"></div>
         </section>
