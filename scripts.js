@@ -356,6 +356,7 @@ function updateGallery() {
     gallery.innerHTML = dataset.map(entry => 
         `<button class="thumb" title="${entry.emotion || 'unknown'} - ${entry.filename || 'demo'}">
             <img src="${entry.imageURL || 'https://picsum.photos/seed/nexus/110/110'}" alt="${entry.filename || 'object'}">
+            <div class="emotion-overlay">${entry.emotion || 'unknown'}</div>
         </button>`
     ).join('');
     
