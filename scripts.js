@@ -55,7 +55,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Start data sync
     if (window.location.pathname.includes('visualisation.html')) {
-        syncDataset().then(runClustering);
+        console.log('Visualization page detected, loading dataset and clustering...');
+        syncDataset().then(() => {
+            console.log('Dataset synced, starting clustering...');
+            return runClustering();
+        });
     } else {
         syncDataset();
         setInterval(syncDataset, 10000);
@@ -446,13 +450,16 @@ async function initPyodide() {
 
 async function runClustering() {
     const mlStatus = document.getElementById('mlStatus');
+    console.log('runClustering called, dataset length:', dataset.length);
     
     if (!dataset.length) {
         if (mlStatus) mlStatus.textContent = 'No data to analyse yet.';
+        console.log('No dataset to cluster');
         return;
     }
 
     if (dataset.length < 6) {
+        console.log('Dataset too small for clustering, using fallback');
         if (mlStatus) mlStatus.textContent = `Need at least 6 objects (currently ${dataset.length})`;
         currentClusters = dataset.map((_, i) => i % 6);
         clusterDisagreement = [0, 0, 0, 0, 0, 0];
@@ -487,13 +494,16 @@ labels.tolist()
         `);
         
         currentClusters = clusterLabels;
+        console.log('Clustering complete! Cluster assignments:', clusterLabels);
         
         // Calculate emotion disagreement per cluster
         if (mlStatus) mlStatus.textContent = 'Analyzing emotion patterns…';
         clusterDisagreement = calculateDisagreement(currentClusters);
+        console.log('Disagreement scores:', clusterDisagreement);
         
         if (mlStatus) mlStatus.textContent = `Clustered ${dataset.length} objects`;
         showClusterView();
+        console.log('Cluster view displayed');
         
     } catch (error) {
         console.error('Clustering failed:', error);
