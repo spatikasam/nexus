@@ -179,32 +179,31 @@ async function submitEntry() {
         showUploadProgress('Uploading to cloud...', 30);
         const storageRef = storage.ref(`nexus/${Date.now()}_${file.name}`);
         const uploadTask = storageRef.putString(base64Data, 'base64');
-             uploadTask.then(
-     async () => {
-       // 3. Get download URL
-       showUploadProgress('Finalizing...', 95);
-       const downloadURL = await storageRef.getDownloadURL();
-       
-       // 4. Save to Firestore
-       await db.collection('nexus').add({
-         emotion: emotion,
-         filename: file.name,
-         imageURL: downloadURL,
-         timestamp: firebase.firestore.FieldValue.serverTimestamp()
-       });
-       
-       // 5. Success!
-       showUploadProgress('Success! Added to dataset.', 100);
-       await new Promise(r => setTimeout(r, 1200));
-       
-       resetUploadForm();
-       await syncDataset();
-     },
-     (error) => {
-       console.error('Upload error:', error);
-       throw new Error('Storage upload failed');
-     }
-   );
+        await uploadTask.then(
+            async () => {
+                // 3. Get download URL
+                showUploadProgress('Finalizing...', 95);
+                const downloadURL = await storageRef.getDownloadURL();
+                
+                // 4. Save to Firestore
+                await db.collection('nexus').add({
+                    emotion: emotion,
+                    filename: file.name,
+                    imageURL: downloadURL,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // 5. Success!
+                showUploadProgress('Success! Added to dataset.', 100);
+                await new Promise(r => setTimeout(r, 1200));
+                
+                resetUploadForm();
+                await syncDataset();
+            },
+            (error) => {
+                console.error('Upload error:', error);
+                throw new Error('Storage upload failed');
+            }
         );
 
     } catch (error) {
