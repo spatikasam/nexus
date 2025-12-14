@@ -125,19 +125,29 @@ function updatePreview(imageSrc) {
     
     const currentEmotion = emotionSelect.value;
     const needsEmotion = !currentEmotion;
+    
+    // Just show the image
     previewEl.innerHTML = `
         <div class="preview-frame">
             <img src="${imageSrc}" alt="preview">
-            <div class="preview-label ${needsEmotion ? 'needs-selection' : ''}">
-                ${needsEmotion ? '↑ Choose emotion above ↑' : currentEmotion}
-            </div>
         </div>
     `;
+    
+    // Highlight dropdown if emotion not selected
+    if (needsEmotion) {
+        emotionSelect.classList.add('needs-selection');
+    } else {
+        emotionSelect.classList.remove('needs-selection');
+    }
 }
 
 function updatePreviewAndButton() {
     if (imageInput.files.length > 0) {
         updatePreviewFromCurrentFile();
+    }
+    // Remove highlight when emotion is selected
+    if (emotionSelect.value) {
+        emotionSelect.classList.remove('needs-selection');
     }
     updateUploadButtonState();
 }
