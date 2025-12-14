@@ -339,20 +339,154 @@ async function initPyodide() {
 }
 
 async function runClustering() {
+    const mlStatus = document.getElementById('mlStatus');
+    
     if (!dataset.length) {
-        const mlStatus = document.getElementById('mlStatus');
         if (mlStatus) mlStatus.textContent = 'No data to analyse yet.';
         return;
     }
 
-    const py = await initPyodide();
-    const mlStatus = document.getElementById('mlStatus');
-    if (mlStatus) mlStatus.textContent = 'Computing visual clusters…';
+    if (dataset.length < 6) {
+        if (mlStatus) mlStatus.textContent = `Need at least 6 objects (currently ${dataset.length})`;
+        currentClusters = dataset.map((_, i) => i % 6);
+        clusterDisagreement = [0, 0, 0, 0, 0, 0];
+        showClusterView();
+        return;
+    }
+
+    try {
+        const py = await initPyodide();
+        if (mlStatus) mlStatus.textContent = 'Extracting visual features…';
+        
+        // Extract color features from images
+        const features = await extractImageFeatures(dataset);
+        
+        if (mlStatus) mlStatus.textContent = 'Running K-Means clustering…';
+        
+        // Convert features to numpy array and run KMeans
+        py.globals.set('features', features);
+        const clusterLabels = await py.runPythonAsync(`
+import numpy as np
+from sklearn.cluster import KMeans
+
+# Convert features to numpy array
+X = np.array(features.to_py())
+
+# Run KMeans with 6 clusters
+kmeans = KMeans(n_clusters=6, random_state=42, n_init=10)
+labels = kmeans.fit_predict(X)
+
+# Return cluster assignments
+labels.tolist()
+        `);
+        
+        currentClusters = clusterLabels;
+        
+        // Calculate emotion disagreement per cluster
+        if (mlStatus) mlStatus.textContent = 'Analyzing emotion patterns…';
+        clusterDisagreement = calculateDisagreement(currentClusters);
+        
+        if (mlStatus) mlStatus.textContent = `Clustered ${dataset.length} objects`;
+        showClusterView();
+        
+    } catch (error) {
+        console.error('Clustering failed:', error);
+        if (mlStatus) mlStatus.textContent = 'Clustering failed. Using fallback.';
+        // Fallback to simple random clustering
+        currentClusters = dataset.map(() => Math.floor(Math.random() * 6));
+        clusterDisagreement = [0.4, 0.7, 0.3, 0.9, 0.2, 0.6];
+        showClusterView();
+    }
+}
+
+// Extract color features from images
+async function extractImageFeatures(data) {
+    const features = [];
     
-    // Simplified clustering with demo data for now
-    currentClusters = Array(dataset.length).fill().map(() => Math.floor(Math.random() * 6));
-    clusterDisagreement = [0.4, 0.7, 0.3, 0.9, 0.2, 0.6];
-    showClusterView();
+    for (const item of data) {
+        try {
+            const colorFeatures = await getImageColorFeatures(item.imageURL);
+            features.push(colorFeatures);
+        } catch (e) {
+            // If image fails to load, use default features
+            features.push([128, 128, 128, 0.5, 0.5, 0.5]);
+        }
+    }
+    
+    return features;
+}
+
+// Extract color histogram features from an image
+function getImageColorFeatures(imageURL) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Resize to small size for faster processing
+            canvas.width = 50;
+            canvas.height = 50;
+            ctx.drawImage(img, 0, 0, 50, 50);
+            
+            const imageData = ctx.getImageData(0, 0, 50, 50).data;
+            
+            // Calculate average RGB and color variance
+            let r = 0, g = 0, b = 0;
+            let rVar = 0, gVar = 0, bVar = 0;
+            const pixelCount = 50 * 50;
+            
+            // First pass: averages
+            for (let i = 0; i < imageData.length; i += 4) {
+                r += imageData[i];
+                g += imageData[i + 1];
+                b += imageData[i + 2];
+            }
+            r /= pixelCount;
+            g /= pixelCount;
+            b /= pixelCount;
+            
+            // Second pass: variance
+            for (let i = 0; i < imageData.length; i += 4) {
+                rVar += Math.pow(imageData[i] - r, 2);
+                gVar += Math.pow(imageData[i + 1] - g, 2);
+                bVar += Math.pow(imageData[i + 2] - b, 2);
+            }
+            rVar = Math.sqrt(rVar / pixelCount) / 255;
+            gVar = Math.sqrt(gVar / pixelCount) / 255;
+            bVar = Math.sqrt(bVar / pixelCount) / 255;
+            
+            // Return normalized features: [avg_r, avg_g, avg_b, var_r, var_g, var_b]
+            resolve([r / 255, g / 255, b / 255, rVar, gVar, bVar]);
+        };
+        
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = imageURL;
+    });
+}
+
+// Calculate emotion disagreement within each cluster
+function calculateDisagreement(clusters) {
+    const disagreement = [0, 0, 0, 0, 0, 0];
+    
+    for (let clusterIdx = 0; clusterIdx < 6; clusterIdx++) {
+        const clusterEmotions = dataset
+            .filter((_, i) => clusters[i] === clusterIdx)
+            .map(item => item.emotion);
+        
+        if (clusterEmotions.length === 0) continue;
+        
+        // Count unique emotions in this cluster
+        const uniqueEmotions = new Set(clusterEmotions);
+        
+        // Disagreement = (unique emotions - 1) / 5 (max possible is 6 emotions)
+        // Higher score = more emotional diversity
+        disagreement[clusterIdx] = (uniqueEmotions.size - 1) / 5;
+    }
+    
+    return disagreement;
 }
 
 function showClusterView() {
