@@ -138,13 +138,10 @@
                         </div>
                     </div>
 
-                    <!-- STATUS + CONTROLS on left to help balance column heights -->
-                    <div class="status-section" style="margin-top: 28px;">
-                        <div class="status-pill" id="syncStatus">0 objects</div>
-                        <div class="utility-controls">
-                            <button class="btn-ghost" onclick="downloadDataset()">Export dataset</button>
-                            <a href="visualisation.html" class="btn-ghost">View analysis →</a>
-                        </div>
+                    <!-- CONTROLS -->
+                    <div class="utility-controls" style="margin-top: 28px;">
+                        <button class="btn-ghost" onclick="downloadDataset()">Export dataset</button>
+                        <a href="visualisation.html" class="btn-ghost">View analysis →</a>
                     </div>
                 </div>
             </div>
@@ -162,6 +159,7 @@
                         <p class="upload-main-text">Drop image here</p>
                         <p class="upload-subtext">PNG, JPG up to 10MB</p>
                         <label for="imageInput" class="browse-btn">Browse</label>
+                        <div class="dataset-count" id="syncStatus">0 objects</div>
                     </div>
                     
                     <!-- NEW: Upload progress overlay -->

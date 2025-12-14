@@ -319,11 +319,11 @@ async function syncDataset() {
         }));
         
         updateGallery();
-        syncStatusEl.textContent = `${dataset.length} objects`;
+        syncStatusEl.innerHTML = `<span style="opacity: 0.7;">📦</span> ${dataset.length} ${dataset.length === 1 ? 'object' : 'objects'}`;
         
     } catch (e) {
         console.error('Sync failed:', e);
-        syncStatusEl.textContent = 'Demo mode';
+        syncStatusEl.innerHTML = '<span style="opacity: 0.7;">Demo mode</span>';
         dataset = Array(12).fill().map((_, i) => ({
             id: i, 
             emotion: emotions[i % 6], 

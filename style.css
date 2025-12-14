@@ -290,6 +290,28 @@ body {
     font-weight: 500; border: none; cursor: pointer;
 }
 
+.dataset-count {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(38, 87, 214, 0.12);
+    color: #2657d6;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: 1px solid rgba(38, 87, 214, 0.2);
+}
+
+.dataset-count.status-loading {
+    animation: pulse-soft 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
 .emotion-row {
     display: flex; gap: 16px; align-items: center;
     background: rgba(255,255,255,0.6); padding: 16px;
