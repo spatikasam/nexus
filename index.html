@@ -158,11 +158,20 @@
 
                 <div class="upload-area" id="uploadArea">
                     <input type="file" id="imageInput" accept="image/*" style="display:none;">
-                    <div class="upload-box">
+                    <div class="upload-box" id="uploadBox">
                         <div class="upload-icon">+</div>
                         <p class="upload-main-text">Drop image here</p>
                         <p class="upload-subtext">PNG, JPG up to 10MB</p>
                         <label for="imageInput" class="browse-btn">Browse</label>
+                    </div>
+                    
+                    <!-- NEW: Upload progress overlay -->
+                    <div class="upload-overlay" id="uploadOverlay">
+                        <div class="upload-spinner"></div>
+                        <div class="upload-status" id="uploadStatusText">Uploading your object...</div>
+                        <div class="upload-progress-bar">
+                            <div class="upload-progress-fill" id="uploadProgressFill"></div>
+                        </div>
                     </div>
                 </div>
 
