@@ -1,40 +1,65 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>NEXUS – Visualisation</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS Analysis - What We Feel vs What We See</title>
+
+    <!-- Fonts + shared styles -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+
+    <!-- Firebase (same config as index) -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-storage-compat.js"></script>
+
+    <!-- Pyodide for in-browser clustering -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js"></script>
 </head>
 <body class="viz-page">
     <main class="page">
-        <header class="viz-header">
-            <a href="index.html" class="back-btn">← Contribute</a>
-            <h1>NEXUS Analysis</h1>
-            <div class="status-pill" id="mlStatus">Loading dataset…</div>
+        <!-- HEADER / NAV -->
+        <header class="hero" style="grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 40px;">
+            <div>
+                <div class="section-label small">NEXUS / ANALYSIS</div>
+                <h1 style="margin: 8px 0 12px; font-size: 2rem; font-weight: 500; color: #f4f6ff;">
+                    Visual clusters vs human feelings
+                </h1>
+                <p class="hero-lede">
+                    Objects are clustered only by pixels—shape, colour, texture—while emotions come from participants.
+                    This page reveals where visually similar objects trigger very different feelings.
+                </p>
+
+                <div class="status-section" style="margin-top: 24px;">
+                    <div class="status-pill" id="mlStatus">Waiting for data…</div>
+                    <div class="utility-controls">
+                        <a href="index.html" class="btn-ghost">← Back to upload</a>
+                        <button class="btn-ghost" onclick="runClustering()">Re‑run analysis</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cluster-stats" id="clusterStats">
+                <div class="section-label small">CLUSTER ANALYSIS</div>
+                <h2>Loading dataset…</h2>
+                <p style="color:#a0a8c4; max-width:340px; margin: 0 auto;">
+                    Once enough objects are uploaded, the ML model groups them into 6 visual clusters and measures
+                    how many different emotions appear inside each cluster.
+                </p>
+            </div>
         </header>
 
+        <!-- CLUSTER GALLERY GRID -->
         <section class="cluster-section">
-            <div class="cluster-stats" id="clusterStats"></div>
-            <div class="gallery" id="clusterGallery"></div>
-        </section>
-
-        <section class="viz-info">
-            <h3>How to read</h3>
-            <ul>
-                <li><strong>Neutral borders</strong> = same visual cluster (machine perception)</li>
-                <li><strong>Glow brightness</strong> = human disagreement (bright = emotional chaos)</li>
-                <li><strong>Click cluster</strong> = zoom to see conflicting emotions</li>
-            </ul>
+            <div id="clusterGallery" class="gallery" style="margin-top: 0;"></div>
         </section>
     </main>
 
+    <!-- Shared app logic (includes syncDataset, runClustering, etc.) -->
     <script src="scripts.js"></script>
 </body>
 </html>
+
