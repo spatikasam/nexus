@@ -20,52 +20,34 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const storage = firebase.storage();
 
+// DOM ELEMENTS
+let uploadArea, imageInput, emotionSelect, uploadBtn, previewEl, syncStatusEl;
+
 // UTILITY FUNCTIONS
 function getEmotionColor(emotion) {
     const colors = { 
-        anger: '#ff4b5c',
-        disgust: '#46c37b',
-        fear: '#6b5bff',
-        happiness: '#ffd166',
-        sadness: '#4d7cff',
-        surprise: '#ff66c4' 
+        anger: '#ff4b5c', disgust: '#46c37b', fear: '#6b5bff',
+        happiness: '#ffd166', sadness: '#4d7cff', surprise: '#ff66c4' 
     };
     return colors[emotion] || '#2657d6';
 }
 
-// DRAG & DROP + INPUT UPLOAD
-let uploadArea, imageInput, emotionSelect, uploadBtn;
-
+// INITIALIZE
 document.addEventListener('DOMContentLoaded', () => {
+    // Cache DOM elements
     uploadArea = document.getElementById('uploadArea');
     imageInput = document.getElementById('imageInput');
     emotionSelect = document.getElementById('emotionSelect');
     uploadBtn = document.getElementById('uploadBtn');
+    previewEl = document.getElementById('preview');
+    syncStatusEl = document.getElementById('syncStatus');
 
-    if (!uploadArea || !imageInput || !emotionSelect || !uploadBtn) {
-        // Probably on visualisation.html
-        if (!window.location.pathname.includes('visualisation.html')) {
-            console.warn('Upload elements not found on this page.');
-        }
-    } else {
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, preventDefaults, false);
-        });
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, () => uploadArea.classList.add('drag-highlight'), false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('drag-highlight'), false);
-        });
-
-        uploadArea.addEventListener('drop', handleDrop, false);
-        imageInput.addEventListener('change', handleFileSelect);
-        emotionSelect.addEventListener('change', updateUploadButtonState);
+    // Setup upload handlers if on main page
+    if (uploadArea && imageInput && emotionSelect && uploadBtn) {
+        setupUploadHandlers();
     }
 
-    // Initialise dataset and (maybe) clustering
+    // Start data sync
     if (window.location.pathname.includes('visualisation.html')) {
         syncDataset().then(runClustering);
     } else {
@@ -74,23 +56,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+function setupUploadHandlers() {
+    // Drag & drop
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, () => uploadArea.classList.add('drag-highlight'), false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('drag-highlight'), false);
+    });
+    
+    uploadArea.addEventListener('drop', handleDrop, false);
+    imageInput.addEventListener('change', handleFileSelect);
+    emotionSelect.addEventListener('change', updatePreviewAndButton);
+    
+    updateUploadButtonState();
+}
+
 function preventDefaults(e) {
     e.preventDefault();
     e.stopPropagation();
 }
 
 function handleDrop(e) {
-    const dt = e.dataTransfer;
-    const files = dt.files;
-    // Set the file onto the hidden input so submitEntry() can read it
-    if (files && files.length > 0 && imageInput) {
-        imageInput.files = files;
-    }
+    const files = e.dataTransfer.files;
+    imageInput.files = files; // Make files available to submitEntry()
     handleFiles(files);
 }
 
 function handleFileSelect() {
-    if (!imageInput) return;
     handleFiles(imageInput.files);
 }
 
@@ -98,62 +96,67 @@ function handleFiles(files) {
     if (!files || files.length === 0) return;
 
     const file = Array.from(files).find(f => f.type.startsWith('image/'));
-    if (file && file.size <= 10 * 1024 * 1024) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            showPreview(e.target.result, emotionSelect ? emotionSelect.value : '');
-            updateUploadButtonState();
-        };
-        reader.readAsDataURL(file);
-    } else if (file && file.size > 10 * 1024 * 1024) {
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
         alert('File too large. Maximum 10MB.');
+        return;
     }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        // Show current emotion (updates live when dropdown changes)
+        updatePreview(e.target.result);
+        updateUploadButtonState();
+    };
+    reader.readAsDataURL(file);
+}
+
+function updatePreview(imageSrc) {
+    if (!previewEl) return;
+    
+    const currentEmotion = emotionSelect.value || 'pending';
+    previewEl.innerHTML = `
+        <div class="preview-frame">
+            <img src="${imageSrc}" alt="preview">
+            <div class="preview-label">${currentEmotion}</div>
+        </div>
+    `;
+}
+
+function updatePreviewAndButton() {
+    updatePreviewFromCurrentFile();
+    updateUploadButtonState();
+}
+
+function updatePreviewFromCurrentFile() {
+    if (!previewEl || !imageInput.files.length) return;
+    
+    const file = imageInput.files[0];
+    const reader = new FileReader();
+    reader.onload = (e) => updatePreview(e.target.result);
+    reader.readAsDataURL(file);
 }
 
 function updateUploadButtonState() {
     if (!uploadBtn || !imageInput || !emotionSelect) return;
-    const hasFile = imageInput.files && imageInput.files.length > 0;
-    const hasEmotion = !!emotionSelect.value;
-    uploadBtn.disabled = !(hasFile && hasEmotion);
-}
-
-// DATA SYNC
-async function syncDataset() {
-    const statusEl = document.getElementById('syncStatus');
-    if (!statusEl) return;
     
-    try {
-        statusEl.textContent = 'Syncing…';
-        statusEl.classList.add('status-loading');
-        
-        const snapshot = await db.collection('nexus')
-            .orderBy('timestamp', 'desc')
-            .limit(100)
-            .get();
-        dataset = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
-        updateGallery();
-        statusEl.textContent = `${dataset.length} objects`;
-        statusEl.classList.remove('status-loading');
-        
-    } catch (e) {
-        console.error('Sync failed, using demo data', e);
-        statusEl.textContent = 'Demo mode';
-        dataset = Array(12).fill().map((_, i) => ({
-            id: i,
-            emotion: emotions[i % 6],
-            filename: `demo_${i}.jpg`,
-            imageURL: `https://picsum.photos/seed/${i}/110/110`
-        }));
-        updateGallery();
+    const hasFile = imageInput.files && imageInput.files.length > 0;
+    const hasEmotion = emotionSelect.value !== '';
+    uploadBtn.disabled = !(hasFile && hasEmotion);
+    
+    // Visual feedback
+    if (uploadBtn.disabled) {
+        uploadBtn.textContent = 'ADD';
+    } else {
+        uploadBtn.textContent = 'ADD';
     }
 }
 
-// UPLOAD
+// UPLOAD FUNCTION (fixed)
 async function submitEntry() {
-    const statusEl = document.getElementById('syncStatus');
     if (!imageInput || !emotionSelect) {
-        alert('Upload elements not found on this page.');
+        alert('Upload elements not found.');
         return;
     }
 
@@ -161,64 +164,94 @@ async function submitEntry() {
     const emotion = emotionSelect.value;
     
     if (!file || !emotion) {
-        alert('Select image and emotion.');
+        alert('Please select an image and emotion.');
         return;
     }
 
-    if (statusEl) {
-        statusEl.textContent = 'Uploading…';
-        statusEl.classList.add('status-loading');
+    if (syncStatusEl) {
+        syncStatusEl.textContent = 'Uploading…';
+        syncStatusEl.classList.add('status-loading');
     }
     
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        try {
-            const base64 = e.target.result.split(',')[1];
-            const storageRef = storage.ref(`nexus/${Date.now()}_${file.name}`);
-            await storageRef.putString(base64, 'base64');
-            const downloadURL = await storageRef.getDownloadURL();
-            
-            await db.collection('nexus').add({
-                emotion,
-                filename: file.name,
-                imageURL: downloadURL,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            imageInput.value = '';
-            emotionSelect.value = '';
-            if (uploadBtn) uploadBtn.disabled = true;
-            const previewEl = document.getElementById('preview');
-            if (previewEl) previewEl.innerHTML = '';
-            
-            await syncDataset();
-        } catch (err) {
-            alert('Upload failed.');
-            console.error(err);
-        } finally {
-            if (statusEl) statusEl.classList.remove('status-loading');
+    try {
+        // Convert to base64
+        const base64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.readAsDataURL(file);
+        });
+
+        // Upload to Firebase Storage
+        const storageRef = storage.ref(`nexus/${Date.now()}_${file.name}`);
+        await storageRef.putString(base64, 'base64');
+        const downloadURL = await storageRef.getDownloadURL();
+
+        // Save to Firestore
+        await db.collection('nexus').add({
+            emotion,
+            filename: file.name,
+            imageURL: downloadURL,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Reset form
+        imageInput.value = '';
+        emotionSelect.value = '';
+        if (previewEl) previewEl.innerHTML = '';
+        if (uploadBtn) uploadBtn.disabled = true;
+
+        // Refresh dataset
+        await syncDataset();
+        
+        alert('Upload successful!');
+        
+    } catch (error) {
+        console.error('Upload failed:', error);
+        alert('Upload failed. Check console for details.');
+        if (syncStatusEl) {
+            syncStatusEl.textContent = 'Upload failed';
         }
-    };
-    reader.readAsDataURL(file);
+    } finally {
+        if (syncStatusEl) {
+            syncStatusEl.classList.remove('status-loading');
+        }
+    }
 }
 
-// PREVIEW
-function showPreview(imageSrc, emotion) {
-    const previewEl = document.getElementById('preview');
-    if (!previewEl) return;
-
-    previewEl.innerHTML = `
-        <div class="preview-frame">
-            <img src="${imageSrc}" alt="preview">
-            <div class="preview-label">${emotion || 'pending'}</div>
-        </div>
-    `;
+// DATA SYNC
+async function syncDataset() {
+    if (!syncStatusEl) return;
+    
+    try {
+        syncStatusEl.textContent = 'Syncing…';
+        syncStatusEl.classList.add('status-loading');
+        
+        const snapshot = await db.collection('nexus')
+            .orderBy('timestamp', 'desc')
+            .limit(100)
+            .get();
+            
+        dataset = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        updateGallery();
+        syncStatusEl.textContent = `${dataset.length} objects`;
+        
+    } catch (e) {
+        console.error('Sync failed:', e);
+        syncStatusEl.textContent = 'Demo mode';
+        dataset = Array(12).fill().map((_, i) => ({
+            id: i, emotion: emotions[i % 6], filename: `demo_${i}.jpg`,
+            imageURL: `https://picsum.photos/seed/${i}/110/110`
+        }));
+        updateGallery();
+    } finally {
+        syncStatusEl.classList.remove('status-loading');
+    }
 }
 
 // GALLERY
 function updateGallery() {
     const gallery = document.getElementById('gallery');
-    const desc = document.getElementById('galleryDesc');
+    const galleryDesc = document.getElementById('galleryDesc');
     if (!gallery) return;
     
     gallery.innerHTML = dataset.map(entry => 
@@ -227,13 +260,13 @@ function updateGallery() {
         </button>`
     ).join('');
     
-    if (desc) {
-        desc.innerHTML = 
+    if (galleryDesc) {
+        galleryDesc.innerHTML = 
             `Live dataset (${dataset.length} objects). <a href="visualisation.html" class="link">View ML analysis →</a>`;
     }
 }
 
-// UTILITIES
+// DOWNLOAD
 function downloadDataset() {
     const dataStr = JSON.stringify(dataset, null, 2);
     const blob = new Blob([dataStr], {type: 'application/json'});
@@ -242,6 +275,7 @@ function downloadDataset() {
     a.href = url;
     a.download = `nexus-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
+    URL.revokeObjectURL(url);
 }
 
 // PYODIDE (for visualisation.html)
