@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS: Emotional Objects Clustering</title>
+    <title>NEXUS: What We Feel vs What We See</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
@@ -12,20 +12,20 @@
     <!-- PYODIDE for LIVE ML -->
     <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
     
-    <!-- FIREBASE (compat) -->
+    <!-- FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-storage-compat.js"></script>
 </head>
 <body>
     <main class="page">
-        <!-- HERO / INTRO BLOCK -->
+        <!-- HERO -->
         <header class="hero">
             <div class="hero-left">
                 <h1 class="visually-hidden">NEXUS</h1>
                 <img src="assets/nexus.png" alt="NEXUS logo" class="hero-logo">
                 
-                <!-- NEW INSTRUCTIONS SECTION -->
+                <!-- INSTRUCTIONS -->
                 <div class="instructions-section">
                     <div class="instructions-header">
                         <div class="section-label small">HOW NEXUS WORKS</div>
@@ -37,31 +37,28 @@
                             <div class="step-number">1</div>
                             <div class="step-content">
                                 <h3>Upload Object</h3>
-                                <p>Find a household object that triggers emotion. Broken plate, old toy, sharp tool, favorite mug.</p>
+                                <p>Household item that triggers emotion. Broken plate, old toy, sharp tool, favorite mug.</p>
                             </div>
                         </div>
-                        
                         <div class="step">
                             <div class="step-number">2</div>
                             <div class="step-content">
                                 <h3>Label Your Feeling</h3>
-                                <p>Choose the emotion <strong>you</strong> feel (not what it "should" mean). One person's anger = another's sadness.</p>
+                                <p>Your personal emotion (not what it "should" mean). One person's anger = another's sadness.</p>
                             </div>
                         </div>
-                        
                         <div class="step">
                             <div class="step-number">3</div>
                             <div class="step-content">
                                 <h3>Machine Sees Pixels</h3>
-                                <p>ML ignores your label, clusters by visual DNA (shape/color/texture) only.</p>
+                                <p>ML ignores labels, clusters by visual DNA only (shape/color/texture).</p>
                             </div>
                         </div>
-                        
                         <div class="step">
                             <div class="step-number">4</div>
                             <div class="step-content">
                                 <h3>Truth Revealed</h3>
-                                <p>Borders color by ML groups. Aura size shows human disagreement on identical visuals.</p>
+                                <p>Glow brightness shows human disagreement. Bright = emotional chaos.</p>
                             </div>
                         </div>
                     </div>
@@ -72,67 +69,64 @@
                         <div class="prompt-grid">
                             <div class="prompt-item">
                                 <div class="emotion-icon anger"></div>
-                                <div>rusted nail, sharp knife, broken glass</div>
+                                <div>rusted nail, sharp knife</div>
                             </div>
                             <div class="prompt-item">
                                 <div class="emotion-icon fear"></div>
-                                <div>old doll, dark corner, tangled wires</div>
+                                <div>old doll, tangled wires</div>
                             </div>
                             <div class="prompt-item">
                                 <div class="emotion-icon disgust"></div>
-                                <div>moldy bread, sticky wrapper, dead bug</div>
+                                <div>moldy bread, sticky wrapper</div>
                             </div>
                             <div class="prompt-item">
                                 <div class="emotion-icon happiness"></div>
-                                <div>childhood toy, favorite mug, bright flower</div>
+                                <div>childhood toy, favorite mug</div>
                             </div>
                             <div class="prompt-item">
                                 <div class="emotion-icon sadness"></div>
-                                <div>wilted plant, chipped plate, frayed shirt</div>
+                                <div>wilted plant, chipped plate</div>
                             </div>
                             <div class="prompt-item">
                                 <div class="emotion-icon surprise"></div>
-                                <div>odd rock, strange shadow, mystery box</div>
+                                <div>odd rock, mystery box</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <p class="hero-lede">
-                    A shared field of everyday objects annotated with six "universal" emotions.
-                    Each contribution becomes a point in a live clustering experiment running entirely in the browser.
+                    Shared field of everyday objects revealing: <strong>What we feel ≠ what we see.</strong>
                 </p>
                 
                 <div class="status-section">
-                    <div class="status-pill" id="syncStatus">Initialising global dataset…</div>
+                    <div class="status-pill" id="syncStatus">Initialising…</div>
                     <div class="utility-controls">
-                        <button class="btn-ghost" onclick="downloadDataset()">Export ML dataset</button>
-                        <button class="btn-ghost" onclick="showStats()">View stats</button>
+                        <button class="btn-ghost" onclick="downloadDataset()">Export dataset</button>
+                        <a href="visualize.html" class="btn-ghost">View analysis →</a>
                     </div>
                 </div>
             </div>
 
-            <!-- UPLOAD PANEL (unchanged) -->
+            <!-- UPLOAD -->
             <div class="hero-right upload-card">
-                <div class="section-label small">ADD OBJECT</div>
-                <h2 class="panel-title">Contribute to the dataset</h2>
-                <p class="panel-copy">
-                    Select the emotion it carries for you, and send it into the shared space.
-                </p>
+                <div class="section-label small">ADD TO NEXUS</div>
+                <h2>Contribute object</h2>
+                <p class="panel-copy">Drag image + pick your emotion.</p>
 
                 <div class="upload-area" id="uploadArea">
                     <input type="file" id="imageInput" accept="image/*" style="display:none;">
                     <div class="upload-box">
-                        <div class="upload-icon">📸</div>
-                        <p class="upload-main-text">Choose an image & drop it here</p>
-                        <p class="upload-subtext">PNG, JPG, GIF up to 10MB</p>
-                        <label for="imageInput" class="browse-btn">Browse files</label>
+                        <div class="upload-icon">+</div>
+                        <p class="upload-main-text">Drop image here</p>
+                        <p class="upload-subtext">PNG, JPG up to 10MB</p>
+                        <label for="imageInput" class="browse-btn">Browse</label>
                     </div>
                 </div>
 
                 <div class="emotion-row">
                     <select id="emotionSelect">
-                        <option value="">Select emotion</option>
+                        <option value="">Your emotion</option>
                         <option value="anger">Anger</option>
                         <option value="disgust">Disgust</option>
                         <option value="fear">Fear</option>
@@ -140,49 +134,24 @@
                         <option value="sadness">Sadness</option>
                         <option value="surprise">Surprise</option>
                     </select>
-                    <button class="btn-solid upload-btn" onclick="submitEntry()">ADD TO NEXUS</button>
+                    <button class="btn-solid upload-btn" onclick="submitEntry()" disabled id="uploadBtn">ADD</button>
                 </div>
 
                 <div id="preview" class="preview"></div>
             </div>
         </header>
 
-        <!-- Rest of your HTML unchanged -->
-        <section class="cluster-hero-section">
-            <button onclick="runClustering()" class="cluster-hero-btn" id="clusterBtn" disabled>
-                Cluster NEXUS (ML LIVE)
-            </button>
-        </section>
-
-        <section id="stats" class="stats" style="display:none;"></section>
-        <section id="ml-status" class="ml-status" style="display:none;"></section>
-
+        <!-- GALLERY -->
         <section class="gallery-section">
             <div class="gallery-header">
-                <div class="section-label small">DATASET VIEW</div>
+                <div class="section-label small">LIVE DATASET</div>
                 <h2>Global object field</h2>
-                <p>
-                    Each tile is an object–emotion pair. When clustering runs, borders re‑colour to show the model's groupings.
-                </p>
+                <p id="galleryDesc">Upload objects to build the dataset. Click <a href="visualize.html" class="link">View analysis</a> for ML clustering.</p>
             </div>
             <div id="gallery" class="gallery"></div>
         </section>
     </main>
 
-    <!-- Your existing JavaScript unchanged -->
-    <script>
-        // ... (all your existing JS code remains exactly the same)
-        const firebaseConfig = {
-            apiKey: "AIzaSyDc6m_tMPIAQS1pNzRCXyRJJo75-8M6fz4",
-            authDomain: "nexus-emotions.firebaseapp.com",
-            projectId: "nexus-emotions",
-            storageBucket: "nexus-emotions.firebasestorage.app",
-            messagingSenderId: "794178475232",
-            appId: "1:794178475232:web:1e00f87111f4ba0e1aec85",
-            measurementId: "G-TVVE5FS898"
-        };
-
-        // ... rest of your JS (unchanged)
-    </script>
+    <script src="scripts.js"></script>
 </body>
 </html>
