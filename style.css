@@ -251,6 +251,17 @@ body {
     color: #4a5568 !important;
 }
 
+.dataset-status {
+    color: #2657d6;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin: 8px 0 4px;
+}
+
+.dataset-status.status-loading {
+    animation: pulse-soft 1.5s ease-in-out infinite;
+}
+
 .hero-right.upload-card .panel-copy {
     color: #4a5568 !important; margin: 0 0 28px;
     font-size: 0.95rem; line-height: 1.6;

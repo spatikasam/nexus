@@ -319,7 +319,7 @@ async function syncDataset() {
         }));
         
         updateGallery();
-        syncStatusEl.innerHTML = `<span style="opacity: 0.7;">📦</span> ${dataset.length} ${dataset.length === 1 ? 'object' : 'objects'}`;
+        syncStatusEl.innerHTML = `${dataset.length} ${dataset.length === 1 ? 'object' : 'objects'} in the dataset right now`;
         
     } catch (e) {
         console.error('Sync failed:', e);
