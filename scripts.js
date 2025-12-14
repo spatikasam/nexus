@@ -304,7 +304,7 @@ async function syncDataset() {
     if (!syncStatusEl) return;
     
     try {
-        syncStatusEl.textContent = 'Syncing…';
+        syncStatusEl.innerHTML = '<span class="live-dot"></span> Syncing…';
         syncStatusEl.classList.add('status-loading');
         
         const snapshot = await db.collection('nexus')
@@ -319,7 +319,7 @@ async function syncDataset() {
         }));
         
         updateGallery();
-        syncStatusEl.innerHTML = `${dataset.length} ${dataset.length === 1 ? 'object' : 'objects'} in the dataset right now`;
+        syncStatusEl.innerHTML = `<span class="live-dot"></span> ${dataset.length} ${dataset.length === 1 ? 'object' : 'objects'} in the dataset right now`;
         
     } catch (e) {
         console.error('Sync failed:', e);
