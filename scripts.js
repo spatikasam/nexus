@@ -604,18 +604,33 @@ function showClusterView() {
         <div class="section-label small">CLUSTER ANALYSIS</div>
         <h2>6 Visual Clusters (${dataset.length} ${dataset.length === 1 ? 'object' : 'objects'} in the dataset)</h2>
         <div class="cluster-previews">
-            ${[0,1,2,3,4,5].map(i => `
+            ${[0,1,2,3,4,5].map(i => {
+                const clusterSize = dataset.filter((_, idx) => currentClusters[idx] === i).length;
+                return `
                 <div class="cluster-preview" onclick="zoomCluster(${i})">
                     <div class="cluster-glow" style="
                         box-shadow: 0 0 ${20 + 20 * (clusterDisagreement[i] || 0)}px 
                         rgba(255,255,255,${0.2 + 0.3 * (clusterDisagreement[i] || 0)});
                     "></div>
-                    <div>Cluster ${i}</div>
+                    <div>Cluster ${i} (${clusterSize} ${clusterSize === 1 ? 'object' : 'objects'})</div>
                     <div class="cluster-score">${((clusterDisagreement[i] || 0) * 100).toFixed(0)}% chaos</div>
                 </div>
-            `).join('')}
+            `}).join('')}
         </div>
     `;
+    
+    // Show all images in cluster view by default
+    galleryEl.innerHTML = dataset
+        .map((entry, i) => ({...entry, cluster: currentClusters[i]}))
+        .map(img => `
+            <button class="thumb cluster-thumb" onclick="zoomCluster(${img.cluster})" title="Cluster ${img.cluster}: ${img.emotion}">
+                <img src="${img.imageURL}" alt="${img.filename}">
+                <div class="emotion-overlay">
+                    <div style="font-size: 0.75rem; opacity: 0.7;">Cluster ${img.cluster}</div>
+                    <div>${img.emotion}</div>
+                </div>
+            </button>
+        `).join('');
 }
 
 function zoomCluster(clusterId) {
