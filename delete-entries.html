@@ -142,18 +142,22 @@
                 return;
             }
 
-            container.innerHTML = filtered.map(entry => `
+            container.innerHTML = filtered.map(entry => {
+                // Handle both imageURL and imageUrl field names
+                const imageUrl = entry.imageURL || entry.imageUrl || '';
+                return `
                 <div class="entry" id="entry-${entry.id}">
-                    <img src="${entry.imageUrl}" alt="${entry.emotion}">
+                    <img src="${imageUrl}" alt="${entry.emotion}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div style="display:none; padding: 20px; color: #ff6b6b; text-align: center;">Image not found</div>
                     <div class="entry-info">
                         <div class="entry-emotion">Emotion: ${entry.emotion}</div>
                         <div class="entry-time">${entry.timestamp ? new Date(entry.timestamp.toDate()).toLocaleString() : 'Just now'}</div>
                     </div>
-                    <button class="delete-btn" onclick="deleteEntry('${entry.id}', '${entry.imageUrl}')">
+                    <button class="delete-btn" onclick="deleteEntry('${entry.id}', '${imageUrl}')">
                         Delete
                     </button>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function filterEmotion(emotion) {
