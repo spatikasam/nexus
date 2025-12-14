@@ -78,22 +78,67 @@ body {
     margin: 0; font-size: 0.95rem; color: #c4caea; line-height: 1.55;
 }
 
-.emotion-prompts { margin-top: 32px; }
-
-.prompt-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 16px; margin-top: 16px;
+.emotion-prompts { 
+    margin-top: 32px; 
 }
 
+.prompt-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+/* Card */
 .prompt-item {
-    display: flex; flex-direction: column; align-items: flex-start;
-    gap: 8px; padding: 16px; background: rgba(18, 26, 68, 0.5);
-    border-radius: 12px; border: 1px solid rgba(67, 82, 142, 0.3);
-    transition: all 0.3s ease;
+    background: rgba(18, 26, 68, 0.9);
+    border-radius: 16px;
+    border: 1px solid rgba(67, 82, 142, 0.5);
+    padding: 14px 16px;
+    transition: all 0.25s ease;
 }
 
 .prompt-item:hover {
-    background: rgba(38, 87, 214, 0.15); border-color: rgba(38, 87, 214, 0.4);
+    background: rgba(38, 87, 214, 0.18);
+    border-color: rgba(38, 87, 214, 0.6);
+    transform: translateY(-2px);
+}
+
+/* Layout inside card */
+.prompt-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Icon */
+.emotion-icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+}
+
+.emotion-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+/* Text */
+.emotion-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #f5f7ff;
+    margin-bottom: 2px;
+}
+
+.prompt-text {
+    font-size: 0.8rem;
+    color: #c4caea;
+    line-height: 1.35;
 }
 
 /* CLEAN PNG EMOTION ICONS - 36x36 RESIZED */
