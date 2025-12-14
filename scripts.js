@@ -117,6 +117,10 @@ function handleFiles(files) {
         updatePreview(e.target.result);
         updateUploadButtonState();
     };
+    reader.onerror = () => {
+        alert('Error reading file. Please try again.');
+        console.error('FileReader error:', reader.error);
+    };
     reader.readAsDataURL(file);
 }
 
@@ -158,6 +162,9 @@ function updatePreviewFromCurrentFile() {
     const file = imageInput.files[0];
     const reader = new FileReader();
     reader.onload = (e) => updatePreview(e.target.result);
+    reader.onerror = () => {
+        console.error('FileReader error:', reader.error);
+    };
     reader.readAsDataURL(file);
 }
 
