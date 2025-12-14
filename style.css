@@ -31,8 +31,11 @@ body {
 }
 
 .hero-logo {
-    width: min(42vw, 360px); max-width: 100%; height: auto;
-    margin: 12px 0 24px; display: block;
+    width: 100%;
+    max-width: 360px;
+    height: auto;
+    margin: 12px 0 24px;
+    display: block;
 }
 
 .hero-lede {
