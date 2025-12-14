@@ -351,7 +351,7 @@ function updateGallery() {
     
     if (galleryDesc) {
         galleryDesc.innerHTML = 
-            `Live dataset (${dataset.length} objects). <a href="visualisation.html" class="link">View ML analysis →</a>`;
+            `Live dataset (${dataset.length} ${dataset.length === 1 ? 'object' : 'objects'} in the dataset). <a href="visualisation.html" class="link">View ML analysis →</a>`;
     }
 }
 
@@ -544,7 +544,7 @@ function showClusterView() {
 
     statsEl.innerHTML = `
         <div class="section-label small">CLUSTER ANALYSIS</div>
-        <h2>6 Visual Clusters (${dataset.length} objects)</h2>
+        <h2>6 Visual Clusters (${dataset.length} ${dataset.length === 1 ? 'object' : 'objects'} in the dataset)</h2>
         <div class="cluster-previews">
             ${[0,1,2,3,4,5].map(i => `
                 <div class="cluster-preview" onclick="zoomCluster(${i})">
