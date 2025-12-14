@@ -101,9 +101,18 @@ function handleFileSelect() {
 function handleFiles(files) {
     if (!files || files.length === 0) return;
 
-    const file = Array.from(files).find(f => f.type.startsWith('image/'));
+    const file = Array.from(files).find(f => {
+        // Check MIME type and file extension for better compatibility
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
+        const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif'];
+        const fileName = f.name.toLowerCase();
+        
+        return f.type.startsWith('image/') || validTypes.includes(f.type) || 
+               validExtensions.some(ext => fileName.endsWith(ext));
+    });
+    
     if (!file) {
-        alert('Please select an image file (PNG, JPG, etc.)');
+        alert('Please select an image file (PNG, JPG, GIF, WebP, etc.)');
         return;
     }
 
@@ -112,30 +121,52 @@ function handleFiles(files) {
         return;
     }
 
+    // Clear any existing preview first
+    if (previewEl) {
+        previewEl.innerHTML = '<div style="text-align: center; padding: 20px;">Loading preview...</div>';
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
-        updatePreview(e.target.result);
-        updateUploadButtonState();
+        if (e.target && e.target.result) {
+            updatePreview(e.target.result);
+            updateUploadButtonState();
+        }
     };
     reader.onerror = () => {
         alert('Error reading file. Please try again.');
         console.error('FileReader error:', reader.error);
+        if (previewEl) {
+            previewEl.innerHTML = '';
+        }
     };
     reader.readAsDataURL(file);
 }
 
 function updatePreview(imageSrc) {
-    if (!previewEl) return;
+    if (!previewEl || !imageSrc) return;
     
     const currentEmotion = emotionSelect.value;
     const needsEmotion = !currentEmotion;
     
-    // Just show the image
-    previewEl.innerHTML = `
-        <div class="preview-frame">
-            <img src="${imageSrc}" alt="preview">
-        </div>
-    `;
+    // Create image element and preload it before displaying
+    const img = new Image();
+    
+    img.onload = () => {
+        // Only update preview once image is fully loaded
+        previewEl.innerHTML = `
+            <div class="preview-frame">
+                <img src="${imageSrc}" alt="preview">
+            </div>
+        `;
+    };
+    
+    img.onerror = () => {
+        console.error('Failed to load image preview');
+        previewEl.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b;">Failed to load preview. Please try a different image.</div>';
+    };
+    
+    img.src = imageSrc;
     
     // Highlight dropdown if emotion not selected
     if (needsEmotion) {
@@ -160,10 +191,19 @@ function updatePreviewFromCurrentFile() {
     if (!previewEl || !imageInput.files.length) return;
     
     const file = imageInput.files[0];
+    
+    // Show loading state
+    previewEl.innerHTML = '<div style="text-align: center; padding: 20px;">Loading preview...</div>';
+    
     const reader = new FileReader();
-    reader.onload = (e) => updatePreview(e.target.result);
+    reader.onload = (e) => {
+        if (e.target && e.target.result) {
+            updatePreview(e.target.result);
+        }
+    };
     reader.onerror = () => {
         console.error('FileReader error:', reader.error);
+        previewEl.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b;">Failed to load preview.</div>';
     };
     reader.readAsDataURL(file);
 }
