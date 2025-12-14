@@ -49,11 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
     uploadBox = document.getElementById('uploadBox');
 
     // Setup upload handlers if on main page
-    console.log('Elements found:', {uploadArea, imageInput, emotionSelect, uploadBtn, previewEl});
     if (uploadArea && imageInput && emotionSelect && uploadBtn) {
         setupUploadHandlers();
-    } else {
-        console.log('Missing upload elements!');
     }
 
     // Start data sync
@@ -102,15 +99,11 @@ function handleFileSelect() {
 }
 
 function handleFiles(files) {
-    console.log('handleFiles called', files);
-    if (!files || files.length === 0) {
-        console.log('No files');
-        return;
-    }
+    if (!files || files.length === 0) return;
 
     const file = Array.from(files).find(f => f.type.startsWith('image/'));
     if (!file) {
-        console.log('No image file found');
+        alert('Please select an image file (PNG, JPG, etc.)');
         return;
     }
 
@@ -119,10 +112,8 @@ function handleFiles(files) {
         return;
     }
 
-    console.log('Reading file:', file.name);
     const reader = new FileReader();
     reader.onload = (e) => {
-        console.log('File loaded, updating preview');
         updatePreview(e.target.result);
         updateUploadButtonState();
     };
@@ -130,20 +121,15 @@ function handleFiles(files) {
 }
 
 function updatePreview(imageSrc) {
-    console.log('updatePreview called', previewEl, emotionSelect.value);
-    if (!previewEl) {
-        console.log('previewEl not found!');
-        return;
-    }
+    if (!previewEl) return;
     
-    const currentEmotion = emotionSelect.value || 'pending';
+    const currentEmotion = emotionSelect.value || 'Select emotion';
     previewEl.innerHTML = `
         <div class="preview-frame">
             <img src="${imageSrc}" alt="preview">
             <div class="preview-label">${currentEmotion}</div>
         </div>
     `;
-    console.log('Preview updated');
 }
 
 function updatePreviewAndButton() {
@@ -225,11 +211,10 @@ async function submitEntry() {
 
     } catch (error) {
         console.error('Upload failed:', error);
-        showUploadProgress('Upload failed', 0, true);
+        showUploadProgress('Upload failed. Please try again.', 0, true);
         setTimeout(() => {
             hideUploadProgress();
-            alert(`Upload failed: ${error.message}`);
-        }, 1500);
+        }, 2000);
     }
 }
 
