@@ -49,8 +49,11 @@ document.addEventListener('DOMContentLoaded', () => {
     uploadBox = document.getElementById('uploadBox');
 
     // Setup upload handlers if on main page
+    console.log('Elements found:', {uploadArea, imageInput, emotionSelect, uploadBtn, previewEl});
     if (uploadArea && imageInput && emotionSelect && uploadBtn) {
         setupUploadHandlers();
+    } else {
+        console.log('Missing upload elements!');
     }
 
     // Start data sync
@@ -99,18 +102,27 @@ function handleFileSelect() {
 }
 
 function handleFiles(files) {
-    if (!files || files.length === 0) return;
+    console.log('handleFiles called', files);
+    if (!files || files.length === 0) {
+        console.log('No files');
+        return;
+    }
 
     const file = Array.from(files).find(f => f.type.startsWith('image/'));
-    if (!file) return;
+    if (!file) {
+        console.log('No image file found');
+        return;
+    }
 
     if (file.size > 10 * 1024 * 1024) {
         alert('File too large. Maximum 10MB.');
         return;
     }
 
+    console.log('Reading file:', file.name);
     const reader = new FileReader();
     reader.onload = (e) => {
+        console.log('File loaded, updating preview');
         updatePreview(e.target.result);
         updateUploadButtonState();
     };
@@ -118,7 +130,11 @@ function handleFiles(files) {
 }
 
 function updatePreview(imageSrc) {
-    if (!previewEl) return;
+    console.log('updatePreview called', previewEl, emotionSelect.value);
+    if (!previewEl) {
+        console.log('previewEl not found!');
+        return;
+    }
     
     const currentEmotion = emotionSelect.value || 'pending';
     previewEl.innerHTML = `
@@ -127,6 +143,7 @@ function updatePreview(imageSrc) {
             <div class="preview-label">${currentEmotion}</div>
         </div>
     `;
+    console.log('Preview updated');
 }
 
 function updatePreviewAndButton() {
@@ -320,7 +337,6 @@ function downloadDataset() {
 }
 
 // PYODIDE CLUSTERING (for visualisation.html)
-let pyodide = null;
 async function initPyodide() {
     if (pyodide) return pyodide;
     
