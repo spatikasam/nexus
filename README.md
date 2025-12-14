@@ -2,13 +2,6 @@
 
 Interactive art installation showing machine vision vs human emotion.
 
-## 🚀 Quick Start
-
-1. Copy 4 files: `index.html`, `visualisation.html`, `style.css`, `scripts.js`
-2. Open `index.html` in browser
-3. Upload objects + emotions
-4. Click "View analysis" for ML clusters
-
 ## 📱 How It Works
 
 - **Upload page** (`index.html`): Add emotional objects
