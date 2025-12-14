@@ -94,16 +94,17 @@ body {
     background: rgba(38, 87, 214, 0.15); border-color: rgba(38, 87, 214, 0.4);
 }
 
+/* PNG EMOTION ICONS - YOUR CUSTOM IMAGES */
 .emotion-icon {
     width: 56px; height: 56px; border-radius: 16px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    color: white;
     box-shadow: 0 8px 24px rgba(0,0,0,0.2);
     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    overflow: hidden;
 }
 
-.emotion-icon svg {
-    width: 28px; height: 28px;
+.emotion-img {
+    width: 32px; height: 32px; object-fit: contain;
 }
 
 .emotion-icon:hover {
@@ -111,12 +112,13 @@ body {
     box-shadow: 0 16px 40px rgba(0,0,0,0.3);
 }
 
-.emotion-icon.anger { background: linear-gradient(145deg, #D32F2F, #b71c1c); }
-.emotion-icon.disgust { background: linear-gradient(145deg, #43A047, #2e7d32); }
-.emotion-icon.fear { background: linear-gradient(145deg, #8E24AA, #6a1b9a); }
-.emotion-icon.happy { background: linear-gradient(145deg, #FFD600, #ffca28); }
-.emotion-icon.sad { background: linear-gradient(145deg, #2979FF, #1565c0); }
-.emotion-icon.surprise { background: linear-gradient(145deg, #F06292, #c2185b); }
+/* EMOTION-SPECIFIC BACKGROUNDS FOR YOUR PNGs */
+.emotion-icon:nth-child(1) { background: linear-gradient(145deg, #D32F2F, #b71c1c); } /* Anger */
+.emotion-icon:nth-child(2) { background: linear-gradient(145deg, #43A047, #2e7d32); } /* Disgust */
+.emotion-icon:nth-child(3) { background: linear-gradient(145deg, #8E24AA, #6a1b9a); } /* Fear */
+.emotion-icon:nth-child(4) { background: linear-gradient(145deg, #FFD600, #ffca28); } /* Happy */
+.emotion-icon:nth-child(5) { background: linear-gradient(145deg, #2979FF, #1565c0); } /* Sad */
+.emotion-icon:nth-child(6) { background: linear-gradient(145deg, #F06292, #c2185b); } /* Surprise */
 
 .emotion-label {
     color: white; font-weight: 600; font-size: 0.9rem;
@@ -139,7 +141,6 @@ body {
     background: rgba(38, 87, 214, 0.15); border-color: rgba(38, 87, 214, 0.4);
     transform: translateY(-2px);
 }
-
 
 /* STATUS */
 .status-section { margin-top: 32px; }
