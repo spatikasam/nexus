@@ -670,3 +670,257 @@ function zoomCluster(clusterId) {
         `).join('')}
     `;
 }
+
+// EMOTION MEMORY PALACE CONSTELLATION (Add after runClustering)
+let scene, camera, renderer, constellationGroup, stars = [];
+const emotionMap = {
+    anger: { pos: [-0.8, -0.2, 0], color: 0xff4b5c },
+    fear: { pos: [-0.6, 0.2, 0], color: 0x6b5bff },
+    disgust: { pos: [0.2, -0.8, 0], color: 0x46c37b },
+    happiness: { pos: [0.8, 0.6, 0], color: 0xffd166 },
+    sadness: { pos: [-0.3, -0.7, 0], color: 0x4d7cff },
+    surprise: { pos: [0.5, 0.3, 0], color: 0xff66c4 }
+};
+
+// Initialize 3D Constellation Scene
+function initConstellation() {
+    const container = document.getElementById('constellationCanvas') || createConstellationContainer();
+    
+    // Scene setup
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x020309);
+    
+    camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.z = 5;
+    
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+    
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+    scene.add(ambientLight);
+    const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+    pointLight.position.set(10, 10, 10);
+    scene.add(pointLight);
+    
+    // Constellation container
+    constellationGroup = new THREE.Group();
+    scene.add(constellationGroup);
+    
+    // Background stars
+    createStarField();
+    
+    // Orbit controls
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    
+    // Animation loop
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        updateConstellation();
+        renderer.render(scene, camera);
+    }
+    animate();
+    
+    // Resize handler
+    window.addEventListener('resize', onWindowResize);
+    
+    function onWindowResize() {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+    }
+    
+    return container;
+}
+
+// Create constellation container if it doesn't exist
+function createConstellationContainer() {
+    const container = document.createElement('div');
+    container.id = 'constellationContainer';
+    container.style.cssText = `
+        width: 100%; height: 600px; margin: 40px 0;
+        position: relative; border-radius: 24px; overflow: hidden;
+        background: radial-gradient(circle at center, rgba(30,30,43,0.95) 0%, rgba(2,3,9,1) 100%);
+        box-shadow: 0 35px 80px rgba(0,0,0,0.5);
+    `;
+    const canvas = document.createElement('canvas');
+    canvas.id = 'constellationCanvas';
+    container.appendChild(canvas);
+    
+    // Add to DOM (after gallery)
+    const gallerySection = document.querySelector('.gallery-section');
+    if (gallerySection) {
+        gallerySection.parentNode.insertBefore(container, gallerySection.nextSibling);
+    } else {
+        document.body.appendChild(container);
+    }
+    
+    return container;
+}
+
+// Create background starfield
+function createStarField() {
+    const starGeometry = new THREE.BufferGeometry();
+    const starCount = 1000;
+    const positions = new Float32Array(starCount * 3);
+    
+    for (let i = 0; i < starCount * 3; i++) {
+        positions[i] = (Math.random() - 0.5) * 200;
+    }
+    
+    starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    
+    const starMaterial = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 2,
+        sizeAttenuation: false
+    });
+    
+    const starsField = new THREE.Points(starGeometry, starMaterial);
+    scene.add(starsField);
+}
+
+// Update constellation based on dataset + clusters
+function updateConstellation() {
+    if (!dataset.length || !constellationGroup) return;
+    
+    // Clear existing objects
+    while (constellationGroup.children.length) {
+        constellationGroup.remove(constellationGroup.children[0]);
+    }
+    
+    // Group objects by emotion and create constellation nodes
+    Object.entries(emotionMap).forEach(([emotion, { pos, color }]) => {
+        const emotionObjects = dataset.filter(item => item.emotion === emotion);
+        
+        if (emotionObjects.length === 0) return;
+        
+        // Central emotion node (constellation center)
+        const centerGeometry = new THREE.SphereGeometry(0.1 + emotionObjects.length * 0.01, 16, 16);
+        const centerMaterial = new THREE.MeshBasicMaterial({ 
+            color, 
+            transparent: true, 
+            opacity: 0.8 
+        });
+        const centerSphere = new THREE.Mesh(centerGeometry, centerMaterial);
+        centerSphere.position.set(...pos);
+        constellationGroup.add(centerSphere);
+        
+        // Orbiting object particles
+        emotionObjects.slice(0, 8).forEach((obj, i) => { // Max 8 per emotion
+            const particle = createObjectParticle(obj.imageURL || '', color, i);
+            const angle = (i / 8) * Math.PI * 2;
+            const radius = 0.3 + i * 0.05;
+            particle.position.set(
+                pos[0] + Math.cos(angle) * radius,
+                pos[1] + Math.sin(angle) * radius * 0.5,
+                pos[2] + (Math.random() - 0.5) * 0.2
+            );
+            constellationGroup.add(particle);
+        });
+        
+        // Connecting lines (emotional gravity)
+        const lineMaterial = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.3 });
+        emotionObjects.slice(0, 4).forEach((obj, i) => {
+            const points = [
+                new THREE.Vector3(...pos),
+                new THREE.Vector3(
+                    pos[0] + Math.cos(i * Math.PI / 2) * 0.4,
+                    pos[1] + Math.sin(i * Math.PI / 2) * 0.3,
+                    pos[2]
+                )
+            ];
+            const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+            constellationGroup.add(new THREE.Line(lineGeometry, lineMaterial));
+        });
+    });
+    
+    // Animate glow
+    constellationGroup.traverse((child) => {
+        if (child.material) {
+            child.material.emissive = new THREE.Color(child.material.color).multiplyScalar(0.2 + Math.sin(Date.now() * 0.001 + child.position.x) * 0.1);
+        }
+    });
+}
+
+// Create particle representing an object
+function createObjectParticle(imageURL, color, index) {
+    const group = new THREE.Group();
+    
+    // Glowing particle
+    const particleGeometry = new THREE.SphereGeometry(0.08, 12, 12);
+    const particleMaterial = new THREE.MeshBasicMaterial({ 
+        color, 
+        transparent: true, 
+        opacity: 0.9 
+    });
+    const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+    
+    // Glow effect
+    const glowGeometry = new THREE.SphereGeometry(0.12, 12, 12);
+    const glowMaterial = new THREE.MeshBasicMaterial({ 
+        color, 
+        transparent: true, 
+        opacity: 0.3 
+    });
+    const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+    
+    group.add(particle, glow);
+    
+    // Hover effect
+    group.userData.originalScale = 1;
+    group.onHover = () => {
+        group.scale.set(1.5, 1.5, 1.5);
+    };
+    group.onHoverOut = () => {
+        group.scale.set(1, 1, 1);
+    };
+    
+    return group;
+}
+
+// Load Three.js and OrbitControls (add to index.html)
+function loadThreeJS() {
+    return new Promise((resolve) => {
+        if (window.THREE) {
+            resolve();
+            return;
+        }
+        
+        const script1 = document.createElement('script');
+        script1.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+        script1.onload = () => {
+            const script2 = document.createElement('script');
+            script2.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
+            script2.onload = resolve;
+            document.head.appendChild(script2);
+        };
+        document.head.appendChild(script1);
+    });
+}
+
+async function initMemoryPalace() {
+    await loadThreeJS();
+    const container = initConstellation();
+    
+    // Auto-update when dataset changes
+    const observer = new MutationObserver(() => {
+        if (dataset.length > 0) updateConstellation();
+    });
+    
+    observer.observe(document.body, { childList: true, subtree: true });
+}
+
+// Call after clustering
+if (window.location.pathname.includes('visualisation.html')) {
+    // Replace/add this in your runClustering success callback:
+    initMemoryPalace().then(() => {
+        updateConstellation();
+    });
+}
+
