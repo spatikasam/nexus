@@ -606,6 +606,16 @@ body {
     text-align: center; font-weight: 500;
 }
 
+.constellation-section { 
+    margin-top: 80px; text-align: center; 
+}
+.constellation-section h2 { 
+    font-size: 2rem; color: #f4f6ff; 
+}
+#constellationContainer {
+    max-width: 1200px; margin: 0 auto;
+}
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
     .hero { grid-template-columns: 1fr; gap: 40px; }
