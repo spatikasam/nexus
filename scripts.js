@@ -492,6 +492,41 @@ function copyDatasetLists() {
 // ===== PCA VISUALISATION =====
 const pcaState = { scale: 1, tx: 0, ty: 0, basePoints: [], screenPoints: [], images: [] };
 
+function showImageModal(imageURL, filename, emotion) {
+    let modal = document.getElementById('imageModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'imageModal';
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center;
+            z-index: 2000; backdrop-filter: blur(4px);
+        `;
+        modal.innerHTML = `
+            <div style="position: relative; background: #0a0f1f; border-radius: 20px; padding: 24px;
+                max-width: 90%; max-height: 90%; display: flex; flex-direction: column; gap: 16px;
+                border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+                <button id="closeModal" style="position: absolute; top: 12px; right: 12px; background: none; border: none;
+                    color: #a0a8c4; cursor: pointer; font-size: 24px; padding: 4px; opacity: 0.7; transition: opacity 0.2s;">✕</button>
+                <img id="modalImage" src="" alt="Full image" style="max-width: 100%; max-height: 70vh; border-radius: 12px; object-fit: contain;">
+                <div style="text-align: center;">
+                    <div style="font-size: 0.9rem; color: #a0a8c4; opacity: 0.8;" id="modalFilename"></div>
+                    <div style="font-size: 1.1rem; font-weight: 600; color: #f4f6ff;" id="modalEmotion"></div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        document.getElementById('closeModal').onclick = () => modal.style.display = 'none';
+        modal.onclick = (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        };
+    }
+    modal.style.display = 'flex';
+    document.getElementById('modalImage').src = imageURL;
+    document.getElementById('modalFilename').textContent = filename;
+    document.getElementById('modalEmotion').textContent = emotion;
+}
+
 function loadImageSafe(url) {
     return new Promise((resolve) => {
         if (!url) {
@@ -645,6 +680,7 @@ async function runPCAMap() {
         const thumbSize = 38;
         screenPts.forEach((pt, i) => {
             const img = images[i];
+            const emotionColor = colorMap[dataset[i].emotion] || '#a0a8c4';
             if (img) {
                 const half = thumbSize / 2;
                 ctx.save();
@@ -652,6 +688,11 @@ async function runPCAMap() {
                 ctx.arc(pt.x, pt.y, half, 0, Math.PI * 2);
                 ctx.clip();
                 ctx.drawImage(img, pt.x - half, pt.y - half, thumbSize, thumbSize);
+                
+                // Add emotion color tint overlay (20% opacity)
+                ctx.fillStyle = emotionColor + '33'; // 33 = 20% opacity in hex
+                ctx.fillRect(pt.x - half, pt.y - half, thumbSize, thumbSize);
+                
                 ctx.restore();
                 ctx.strokeStyle = 'rgba(255,255,255,0.9)';
                 ctx.lineWidth = 1.2;
@@ -662,7 +703,7 @@ async function runPCAMap() {
                 const radius = 10;
                 ctx.beginPath();
                 ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
-                ctx.fillStyle = colorMap[dataset[i].emotion] || '#a0a8c4';
+                ctx.fillStyle = emotionColor;
                 ctx.fill();
                 ctx.strokeStyle = 'rgba(255,255,255,0.9)';
                 ctx.lineWidth = 1.2;
@@ -670,14 +711,7 @@ async function runPCAMap() {
             }
         });
 
-        // Axes labels
-        ctx.fillStyle = '#a0a8c4';
-        ctx.fillText('PC1', W - pad - 20, H - 10);
-        ctx.save();
-        ctx.translate(10, pad + 20);
-        ctx.rotate(-Math.PI/2);
-        ctx.fillText('PC2', 0, 0);
-        ctx.restore();
+        // No axis labels needed for clean visual look
     }
 
     function findHit(mx, my) {
@@ -726,6 +760,18 @@ async function runPCAMap() {
         pcaState.scale = newScale;
         drawPCA();
         handleHover(ev);
+    };
+
+    canvas.onclick = (ev) => {
+        if (isPanning) return; // Don't open modal while panning
+        const rect = canvas.getBoundingClientRect();
+        const mx = ev.clientX - rect.left;
+        const my = ev.clientY - rect.top;
+        const hit = findHit(mx, my);
+        if (hit >= 0) {
+            const d = dataset[hit];
+            showImageModal(d.imageURL || d.imageUrl, d.filename || 'object', d.emotion || 'unknown');
+        }
     };
 
     canvas.onmousedown = (ev) => {
