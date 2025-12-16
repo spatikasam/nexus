@@ -362,11 +362,13 @@ function resetUploadForm() {
 
 // DATA SYNC
 async function syncDataset() {
-    if (!syncStatusEl) return;
+    // Allow syncing on pages without a status element (e.g., visualisation.html)
     
     try {
-        syncStatusEl.innerHTML = '<span class="live-dot"></span> Syncing…';
-        syncStatusEl.classList.add('status-loading');
+        if (syncStatusEl) {
+            syncStatusEl.innerHTML = '<span class="live-dot"></span> Syncing…';
+            syncStatusEl.classList.add('status-loading');
+        }
         
         const snapshot = await db.collection('nexus')
             .orderBy('timestamp', 'desc')
@@ -380,11 +382,15 @@ async function syncDataset() {
         }));
         
         updateGallery();
-        syncStatusEl.innerHTML = `<span class="live-dot"></span> ${dataset.length} ${dataset.length === 1 ? 'object' : 'objects'} in the dataset right now`;
+        if (syncStatusEl) {
+            syncStatusEl.innerHTML = `<span class="live-dot"></span> ${dataset.length} ${dataset.length === 1 ? 'object' : 'objects'} in the dataset right now`;
+        }
         
     } catch (e) {
         console.error('Sync failed:', e);
-        syncStatusEl.innerHTML = '<span style="opacity: 0.7;">Demo mode</span>';
+        if (syncStatusEl) {
+            syncStatusEl.innerHTML = '<span style="opacity: 0.7;">Demo mode</span>';
+        }
         dataset = Array(12).fill().map((_, i) => ({
             id: i, 
             emotion: emotions[i % 6], 
