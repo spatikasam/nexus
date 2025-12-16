@@ -488,6 +488,34 @@ body {
     box-shadow: 0 0 0 3px rgba(38, 87, 214, 0.1);
 }
 
+/* ANALYSIS PILL BUTTON */
+.btn-analysis-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 40px;
+    background: linear-gradient(145deg, #2657d6, #1e4bb0);
+    color: white;
+    border: none;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 12px 40px rgba(38, 87, 214, 0.5);
+    white-space: nowrap;
+}
+
+.btn-analysis-pill:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 20px 60px rgba(38, 87, 214, 0.6);
+}
+
+.btn-analysis-pill:active {
+    transform: translateY(-2px) scale(1.01);
+}
+
 /* GALLERY */
 .gallery-section { margin-top: 80px; }
 
