@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Start data sync
     if (window.location.pathname.includes('visualisation.html')) {
-        console.log('Visualization page detected, loading dataset and PCA map...');
+        console.log('Visualisation page detected, loading dataset and PCA map...');
         syncDataset().then(() => {
             console.log('Dataset synced, starting PCA mapping...');
             return runPCAMap();
