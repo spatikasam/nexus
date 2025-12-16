@@ -421,8 +421,7 @@ function updateGallery() {
     ).join('');
     
     if (galleryDesc) {
-        galleryDesc.innerHTML = 
-            `Live dataset (${dataset.length} ${dataset.length === 1 ? 'object' : 'objects'} in the dataset). <a href="visualisation.html" class="link">View ML analysis →</a>`;
+        galleryDesc.textContent = `${dataset.length} ${dataset.length === 1 ? 'object' : 'objects'} in the dataset.`;
     }
 }
 
