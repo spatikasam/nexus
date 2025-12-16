@@ -510,7 +510,6 @@ function showImageModal(imageURL, filename, emotion) {
                     color: #a0a8c4; cursor: pointer; font-size: 24px; padding: 4px; opacity: 0.7; transition: opacity 0.2s;">✕</button>
                 <img id="modalImage" src="" alt="Full image" style="max-width: 100%; max-height: 70vh; border-radius: 12px; object-fit: contain;">
                 <div style="text-align: center;">
-                    <div style="font-size: 0.9rem; color: #a0a8c4; opacity: 0.8;" id="modalFilename"></div>
                     <div style="font-size: 1.1rem; font-weight: 600; color: #f4f6ff;" id="modalEmotion"></div>
                 </div>
             </div>
@@ -523,7 +522,6 @@ function showImageModal(imageURL, filename, emotion) {
     }
     modal.style.display = 'flex';
     document.getElementById('modalImage').src = imageURL;
-    document.getElementById('modalFilename').textContent = filename;
     document.getElementById('modalEmotion').textContent = emotion;
 }
 
