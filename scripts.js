@@ -733,7 +733,7 @@ async function runPCAMap() {
             tooltip.style.display = 'block';
             tooltip.style.left = (ev.clientX + 12) + 'px';
             tooltip.style.top = (ev.clientY + 12) + 'px';
-            tooltip.innerHTML = `<div style="opacity:.7">${d.filename||'object'}</div><div style="font-weight:600">${d.emotion||'unknown'}</div>`;
+            tooltip.innerHTML = `<div style="font-weight:600">${d.emotion||'unknown'}</div>`;
         } else {
             tooltip.style.display = 'none';
         }
