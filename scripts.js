@@ -690,7 +690,15 @@ const emotionMap = {
 
 // Initialize 3D Constellation Scene
 function initConstellation() {
-    const container = document.getElementById('constellationCanvas') || createConstellationContainer();
+    // Use the container defined in visualisation.html
+    const container = document.getElementById('constellationContainer') || createConstellationContainer();
+    // Ensure a canvas exists inside the container for sizing
+    let canvas = document.getElementById('constellationCanvas');
+    if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.id = 'constellationCanvas';
+        container.appendChild(canvas);
+    }
     
     // Scene setup
     scene = new THREE.Scene();
@@ -749,7 +757,7 @@ function createConstellationContainer() {
     const container = document.createElement('div');
     container.id = 'constellationContainer';
     container.style.cssText = `
-        width: 100%; height: 600px; margin: 40px 0;
+        width: 100%; max-width: 1200px; height: 600px; margin: 40px auto;
         position: relative; border-radius: 24px; overflow: hidden;
         background: radial-gradient(circle at center, rgba(30,30,43,0.95) 0%, rgba(2,3,9,1) 100%);
         box-shadow: 0 35px 80px rgba(0,0,0,0.5);
@@ -759,9 +767,9 @@ function createConstellationContainer() {
     container.appendChild(canvas);
     
     // Add to DOM (after gallery)
-    const gallerySection = document.querySelector('.gallery-section');
-    if (gallerySection) {
-        gallerySection.parentNode.insertBefore(container, gallerySection.nextSibling);
+    const vizSection = document.querySelector('.constellation-section');
+    if (vizSection) {
+        vizSection.appendChild(container);
     } else {
         document.body.appendChild(container);
     }
