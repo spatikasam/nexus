@@ -1,19 +1,7 @@
-# NEXUS: What We Feel vs What We See
+# NEXUS
 
-Interactive art piece exploring the gap between machine vision and human emotion.
+NEXUS is an interactive web experience that explores the concept of emotionally charged everyday objects. The data collected for this project include images of objects, each paired with an emotion label. This dataset is then visualised as a 2D map, where each image is a point in space.
 
-## How It Works
+A classical machine learning method, Principal Component Analysis (PCA), is applied to the dataset for dimensionality reduction. Visual features such as RGB mean, RGB standard deviation, brightness mean, and saturation mean are analysed to arrange the images by visual similarity across the 2D plane. This means that images that look similar in colour and brightness will fall closer together in the constellation of everyday objects. Each object image has a respective colour for the emotion it evokes, according to the user's upload. Users can observe patterns in how visual similarity and emotions merge and vary across the 2D space.
 
-- Upload page (index.html): add your object and choose the emotion it evokes.
-- Analysis page (visualisation.html): a PCA 2D map places objects based on simple visual features (colour, contrast, brightness, saturation). Colours indicate reported emotions.
-- Hover points to see filename and emotion. Re-run PCA anytime.
-
-## Files
-- index.html — Upload UI + live gallery
-- visualisation.html — PCA 2D map + legend + dataset export
-- style.css — Shared UI styles
-- scripts.js — Firebase sync, uploads, PCA rendering (numeric.js)
-
-## Notes
-- No clustering or Pyodide is used anymore; the visualization is a pure PCA projection computed in the browser with numeric.js.
-- Admin deletion and dataset utilities live in the same codebase (see scripts.js).
+The work highlights tension between what machines can see and what humans can feel. The 2D map is like a landscape to wander and explore how emotion aligns or resists the structure imposed by the algorithm.
