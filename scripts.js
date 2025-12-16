@@ -308,6 +308,12 @@ async function submitEntry() {
                 
                 resetUploadForm();
                 await syncDataset();
+
+                // Scroll to gallery so users see their object
+                const gallerySection = document.getElementById('gallery');
+                if (gallerySection) {
+                    setTimeout(() => gallerySection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+                }
             },
             (error) => {
                 console.error('Upload error:', error);
