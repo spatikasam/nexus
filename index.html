@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     
-    <!-- FIREBASE ONLY (Pyodide loaded on visualisation.html only) -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-storage-compat.js"></script>
@@ -27,7 +27,8 @@
                 <!-- INSTRUCTIONS -->
                 <div class="instructions-section">
                     <div class="instructions-header">
-                    <div class="section-label small">HOW NEXUS WORKS</div>                        <h2>Upload → Label → Cluster → Reveal</h2>
+                    <div class="section-label small">HOW NEXUS WORKS</div>
+                    <h2>Upload → Label → Map → Reveal</h2>
                     </div>
                     
                     <div class="process-steps">
@@ -197,7 +198,7 @@
                 <h2>Gallery of Objects in Nexus</h2>
                 <p id="galleryDesc">
                     Upload objects to build the dataset.
-                    Click <a href="visualisation.html" class="link">View analysis</a> for ML clustering.
+                    Click <a href="visualisation.html" class="link">View analysis</a> to see the PCA map.
                 </p>
             </div>
             <div id="gallery" class="gallery"></div>

@@ -11,77 +11,44 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-
-    <!-- Firebase (same config as index) -->
+    <!-- Numeric.js for PCA (SVD) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-storage-compat.js"></script>
 
-    <!-- Pyodide for in-browser clustering -->
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js"></script>
+    <!-- No Pyodide needed: PCA is done with numeric.js -->
 </head>
 <body class="viz-page">
     <main class="page">
-        <!-- HEADER / NAV -->
         <header class="hero" style="grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 40px;">
             <div>
-                <div class="section-label small">NEXUS / ANALYSIS</div>
-                <h1 style="margin: 8px 0 12px; font-size: 2rem; font-weight: 500; color: #f4f6ff;">
-                    Visual clusters vs human feelings
-                </h1>
-                <p class="hero-lede">
-                    Objects are clustered only by pixels—shape, colour, texture—while emotions come from participants.
-                    This page reveals where visually similar objects trigger very different feelings.
-                </p>
-
-                <div class="status-section" style="margin-top: 24px;">
+                <div class="section-label small">PCA MAP</div>
+                <h1 style="margin: 8px 0 12px; font-size: 2rem; font-weight: 500; color: #f4f6ff;">Visual Map vs Reported Emotions</h1>
+                <p class="hero-lede">Objects are placed in 2D using PCA on simple visual features (colour, contrast, brightness, saturation). Hover points to see filename and emotion.</p>
+                <div class="status-section" style="margin-top: 16px;">
                     <div class="status-pill" id="mlStatus">Waiting for data…</div>
                     <div class="utility-controls">
-                        <a href="index.html" class="btn-ghost">← Back to upload</a>
-                        <button class="btn-ghost" onclick="runClustering()">Re‑run analysis</button>
-                        <button class="btn-ghost" onclick="renderDatasetLists()">Show dataset lists</button>
+                        <button class="btn-ghost" onclick="runPCAMap()">Re‑run PCA</button>
+                        <button class="btn-ghost" onclick="copyDatasetLists()">Copy dataset lists</button>
                     </div>
                 </div>
             </div>
-
-            <div class="cluster-stats" id="clusterStats">
-                <div class="section-label small">CLUSTER ANALYSIS</div>
-                <h2>Loading dataset…</h2>
-                <p style="color:#a0a8c4; max-width:340px; margin: 0 auto;">
-                    Once enough objects are uploaded, the ML model groups them into 6 visual clusters and measures
-                    how many different emotions appear inside each cluster.
-                </p>
-            </div>
         </header>
 
-        <!-- CLUSTER GALLERY GRID -->
-        <section class="cluster-section">
-            <div id="clusterGallery" class="gallery" style="margin-top: 0;"></div>
+        <section class="viz-section" style="margin-top: 0;">
+            <div class="section-label small">PCA 2D MAP</div>
+            <canvas id="pcaCanvas" style="width:100%; max-width: 1200px; height: 600px; border-radius: 16px; display:block; margin: 0 auto; background: linear-gradient(180deg, #0a0f1f 0%, #0a0a14 100%);"></canvas>
+            <div id="pcaLegend" style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:12px; color:#a0a8c4;"></div>
         </section>
 
-        <!-- Dataset Lists Export -->
-        <section class="dataset-lists-section" style="margin-top: 24px;">
-            <div class="section-label small">DATA EXPORT</div>
-            <p style="color:#a0a8c4; max-width:600px;">Quick arrays for use elsewhere. Refresh after new uploads.</p>
-            <div style="display:flex; gap:8px; flex-wrap: wrap; margin: 8px 0 12px;">
-                <button class="btn-ghost" onclick="renderDatasetLists()">Refresh lists</button>
-                <button class="btn-ghost" onclick="copyDatasetLists()">Copy to clipboard</button>
-            </div>
-            <pre id="datasetLists" style="display:none; background:#0c0f1a; color:#d7e1ff; padding:16px; border-radius:12px; overflow:auto;"></pre>
+        <section style="margin-top:24px; text-align:center;">
+            <div class="section-label small">DATASET EXPORT</div>
+            <pre id="datasetLists" style="display:none; max-width: 960px; margin: 0 auto; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); padding: 12px 16px; border-radius: 12px; white-space: pre-wrap;"></pre>
             <div id="datasetListsEmpty" style="color:#a0a8c4;"></div>
         </section>
-
-        <!-- Emotion Memory Palace -->
-        <section class="constellation-section">
-            <div class="section-label small">EMOTION MEMORY PALACE</div>
-            <h2>Live Emotional Constellations</h2>
-            <p>Watch objects orbit their emotional homes. Upload more to see constellations grow.</p>
-            <div id="constellationContainer"></div>
-        </section>
-
     </main>
 
-    <!-- Shared app logic (includes syncDataset, runClustering, etc.) -->
     <script src="scripts.js"></script>
 </body>
 </html>

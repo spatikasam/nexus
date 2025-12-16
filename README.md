@@ -1,22 +1,19 @@
 # NEXUS: What We Feel vs What We See
 
-Interactive art installation showing machine vision vs human emotion.
+Interactive art piece exploring the gap between machine vision and human emotion.
 
-## 📱 How It Works
+## How It Works
 
-- **Upload page** (`index.html`): Add emotional objects
-- **Analysis page** (`visualisation.html`): ML reveals human disagreement
-- **White glow** = disagreement strength (bright = emotional chaos)
-- **Click clusters** = zoom to see conflicting emotions
+- Upload page (index.html): add your object and choose the emotion it evokes.
+- Analysis page (visualisation.html): a PCA 2D map places objects based on simple visual features (colour, contrast, brightness, saturation). Colours indicate reported emotions.
+- Hover points to see filename and emotion. Re-run PCA anytime.
 
-## 🛠 Files
-- index.html # Upload + gallery
-- visualisation.html # ML analysis + zoom
-- style.css # Dark theme + glows
-- scripts.js # Firebase + Pyodide ML
+## Files
+- index.html — Upload UI + live gallery
+- visualisation.html — PCA 2D map + legend + dataset export
+- style.css — Shared UI styles
+- scripts.js — Firebase sync, uploads, PCA rendering (numeric.js)
 
-## 🎨 Key Features
-
-- Pure visual clustering (ignores emotions)
-- Brightness encodes disagreement 
-- Cluster zoom shows human-machine disconnect
+## Notes
+- No clustering or Pyodide is used anymore; the visualization is a pure PCA projection computed in the browser with numeric.js.
+- Admin deletion and dataset utilities live in the same codebase (see scripts.js).

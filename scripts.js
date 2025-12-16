@@ -1,8 +1,5 @@
 // GLOBAL STATE
 let dataset = [];
-let pyodide = null;
-let currentClusters = [];
-let clusterDisagreement = [];
 const emotions = ['anger', 'fear', 'disgust', 'happiness', 'sadness', 'surprise'];
 
 // FIREBASE CONFIG
@@ -55,10 +52,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Start data sync
     if (window.location.pathname.includes('visualisation.html')) {
-        console.log('Visualization page detected, loading dataset and clustering...');
+        console.log('Visualization page detected, loading dataset and PCA map...');
         syncDataset().then(() => {
-            console.log('Dataset synced, starting clustering...');
-            return runClustering();
+            console.log('Dataset synced, starting PCA mapping...');
+            return runPCAMap();
         });
     } else {
         syncDataset();
@@ -482,509 +479,181 @@ function copyDatasetLists() {
         const mlStatus = document.getElementById('mlStatus');
         if (mlStatus) {
             mlStatus.textContent = 'Copied dataset lists to clipboard';
-            setTimeout(() => (mlStatus.textContent = `Clustered ${dataset.length} objects`), 2000);
+            setTimeout(() => (mlStatus.textContent = `PCA ready • ${dataset.length} objects`), 2000);
         }
     }).catch(() => {});
 }
 
-// PYODIDE CLUSTERING (for visualisation.html)
-async function initPyodide() {
-    if (pyodide) return pyodide;
-    
-    const mlStatus = document.getElementById('mlStatus');
-    if (mlStatus) mlStatus.textContent = 'Loading ML engine…';
-    
-    pyodide = await loadPyodide();
-    await pyodide.runPythonAsync(`
-        import numpy as np
-        from sklearn.cluster import KMeans
-    `);
-    
-    if (mlStatus) mlStatus.textContent = 'ML ready.';
-    return pyodide;
-}
-
-async function runClustering() {
-    const mlStatus = document.getElementById('mlStatus');
-    console.log('runClustering called, dataset length:', dataset.length);
-    
-    if (!dataset.length) {
-        if (mlStatus) mlStatus.textContent = 'No data to analyse yet.';
-        console.log('No dataset to cluster');
-        return;
-    }
-
-    if (dataset.length < 6) {
-        console.log('Dataset too small for clustering, using fallback');
-        if (mlStatus) mlStatus.textContent = `Need at least 6 objects (currently ${dataset.length})`;
-        currentClusters = dataset.map((_, i) => i % 6);
-        clusterDisagreement = [0, 0, 0, 0, 0, 0];
-        showClusterView();
-        return;
-    }
-
-    try {
-        const py = await initPyodide();
-        if (mlStatus) mlStatus.textContent = 'Extracting visual features…';
-        
-        // Extract color features from images
-        const features = await extractImageFeatures(dataset);
-        
-        if (mlStatus) mlStatus.textContent = 'Running K-Means clustering…';
-        
-        // Convert features to numpy array and run KMeans
-        py.globals.set('features', features);
-        const clusterLabels = await py.runPythonAsync(`
-import numpy as np
-from sklearn.cluster import KMeans
-
-# Convert features to numpy array
-X = np.array(features.to_py())
-
-# Run KMeans with 6 clusters
-kmeans = KMeans(n_clusters=6, random_state=42, n_init=10)
-labels = kmeans.fit_predict(X)
-
-# Return cluster assignments
-labels.tolist()
-        `);
-        
-        currentClusters = clusterLabels;
-        console.log('Clustering complete! Cluster assignments:', clusterLabels);
-        
-        // Calculate emotion disagreement per cluster
-        if (mlStatus) mlStatus.textContent = 'Analyzing emotion patterns…';
-        clusterDisagreement = calculateDisagreement(currentClusters);
-        console.log('Disagreement scores:', clusterDisagreement);
-        
-        if (mlStatus) mlStatus.textContent = `Clustered ${dataset.length} objects`;
-        showClusterView();
-        console.log('Cluster view displayed');
-        
-    } catch (error) {
-        console.error('Clustering failed:', error);
-        if (mlStatus) mlStatus.textContent = 'Clustering failed. Using fallback.';
-        // Fallback to simple random clustering
-        currentClusters = dataset.map(() => Math.floor(Math.random() * 6));
-        clusterDisagreement = [0.4, 0.7, 0.3, 0.9, 0.2, 0.6];
-        showClusterView();
-    }
-}
-
-// Extract color features from images
-async function extractImageFeatures(data) {
-    const features = [];
-    
-    for (const item of data) {
-        try {
-            const colorFeatures = await getImageColorFeatures(item.imageURL);
-            features.push(colorFeatures);
-        } catch (e) {
-            // If image fails to load, use default features
-            features.push([128, 128, 128, 0.5, 0.5, 0.5]);
-        }
-    }
-    
-    return features;
-}
-
-// Extract color histogram features from an image
-function getImageColorFeatures(imageURL) {
-    return new Promise((resolve, reject) => {
+// ===== PCA VISUALISATION =====
+async function extractImageFeaturesPCA(imageURL) {
+    return new Promise((resolve) => {
         const img = new Image();
         img.crossOrigin = 'Anonymous';
-        
         img.onload = () => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            
-            // Resize to small size for faster processing
-            canvas.width = 50;
-            canvas.height = 50;
-            ctx.drawImage(img, 0, 0, 50, 50);
-            
-            const imageData = ctx.getImageData(0, 0, 50, 50).data;
-            
-            // Calculate average RGB and color variance
-            let r = 0, g = 0, b = 0;
-            let rVar = 0, gVar = 0, bVar = 0;
-            const pixelCount = 50 * 50;
-            
-            // First pass: averages
-            for (let i = 0; i < imageData.length; i += 4) {
-                r += imageData[i];
-                g += imageData[i + 1];
-                b += imageData[i + 2];
+            const S = 64;
+            canvas.width = S;
+            canvas.height = S;
+            ctx.drawImage(img, 0, 0, S, S);
+            const data = ctx.getImageData(0, 0, S, S).data;
+            const n = S * S;
+            let rSum=0, gSum=0, bSum=0;
+            for (let i=0; i<data.length; i+=4) {
+                rSum += data[i];
+                gSum += data[i+1];
+                bSum += data[i+2];
             }
-            r /= pixelCount;
-            g /= pixelCount;
-            b /= pixelCount;
-            
-            // Second pass: variance
-            for (let i = 0; i < imageData.length; i += 4) {
-                rVar += Math.pow(imageData[i] - r, 2);
-                gVar += Math.pow(imageData[i + 1] - g, 2);
-                bVar += Math.pow(imageData[i + 2] - b, 2);
+            const rMean = rSum / n / 255;
+            const gMean = gSum / n / 255;
+            const bMean = bSum / n / 255;
+            let rVar=0, gVar=0, bVar=0;
+            let sSum=0, vSum=0;
+            for (let i=0; i<data.length; i+=4) {
+                const r = data[i]/255, g = data[i+1]/255, b = data[i+2]/255;
+                rVar += (r - rMean) * (r - rMean);
+                gVar += (g - gMean) * (g - gMean);
+                bVar += (b - bMean) * (b - bMean);
+                const maxc = Math.max(r,g,b), minc = Math.min(r,g,b);
+                const v = maxc;
+                const s = maxc === 0 ? 0 : (maxc - minc) / maxc;
+                sSum += s; vSum += v;
             }
-            rVar = Math.sqrt(rVar / pixelCount) / 255;
-            gVar = Math.sqrt(gVar / pixelCount) / 255;
-            bVar = Math.sqrt(bVar / pixelCount) / 255;
-            
-            // Return normalized features: [avg_r, avg_g, avg_b, var_r, var_g, var_b]
-            resolve([r / 255, g / 255, b / 255, rVar, gVar, bVar]);
+            rVar = Math.sqrt(rVar / n);
+            gVar = Math.sqrt(gVar / n);
+            bVar = Math.sqrt(bVar / n);
+            const brightness = vSum / n;
+            const saturation = sSum / n;
+            resolve([rMean, gMean, bMean, rVar, gVar, bVar, brightness, saturation]);
         };
-        
-        img.onerror = () => reject(new Error('Failed to load image'));
+        img.onerror = () => resolve([0.5,0.5,0.5,0.1,0.1,0.1,0.5,0.5]);
         img.src = imageURL;
     });
 }
 
-// Calculate emotion disagreement within each cluster
-function calculateDisagreement(clusters) {
-    const disagreement = [0, 0, 0, 0, 0, 0];
-    
-    for (let clusterIdx = 0; clusterIdx < 6; clusterIdx++) {
-        const clusterEmotions = dataset
-            .filter((_, i) => clusters[i] === clusterIdx)
-            .map(item => item.emotion);
-        
-        if (clusterEmotions.length === 0) continue;
-        
-        // Count unique emotions in this cluster
-        const uniqueEmotions = new Set(clusterEmotions);
-        
-        // Disagreement = (unique emotions - 1) / 5 (max possible is 6 emotions)
-        // Higher score = more emotional diversity
-        disagreement[clusterIdx] = (uniqueEmotions.size - 1) / 5;
+async function runPCAMap() {
+    const status = document.getElementById('mlStatus');
+    const canvas = document.getElementById('pcaCanvas');
+    const legend = document.getElementById('pcaLegend');
+    if (!canvas || !legend) return;
+    const ctx = canvas.getContext('2d');
+    if (!dataset || !dataset.length) {
+        if (status) status.textContent = 'No data to analyse yet.';
+        return;
     }
-    
-    return disagreement;
-}
+    if (status) status.textContent = 'Extracting features…';
 
-function showClusterView() {
-    const statsEl = document.getElementById('clusterStats');
-    const galleryEl = document.getElementById('clusterGallery');
-    if (!statsEl || !galleryEl) return;
-
-    statsEl.innerHTML = `
-        <div class="section-label small">CLUSTER ANALYSIS</div>
-        <h2>6 Visual Clusters (${dataset.length} ${dataset.length === 1 ? 'object' : 'objects'} in the dataset)</h2>
-        <div class="cluster-previews">
-            ${[0,1,2,3,4,5].map(i => {
-                const clusterSize = dataset.filter((_, idx) => currentClusters[idx] === i).length;
-                return `
-                <div class="cluster-preview" onclick="zoomCluster(${i})">
-                    <div class="cluster-glow" style="
-                        box-shadow: 0 0 ${20 + 20 * (clusterDisagreement[i] || 0)}px 
-                        rgba(255,255,255,${0.2 + 0.3 * (clusterDisagreement[i] || 0)});
-                    "></div>
-                    <div>Cluster ${i} (${clusterSize} ${clusterSize === 1 ? 'object' : 'objects'})</div>
-                    <div class="cluster-score">${((clusterDisagreement[i] || 0) * 100).toFixed(0)}% chaos</div>
-                </div>
-            `}).join('')}
-        </div>
-    `;
-    
-    // Show all images in cluster view by default
-    galleryEl.innerHTML = dataset
-        .map((entry, i) => ({...entry, cluster: currentClusters[i]}))
-        .map(img => `
-            <button class="thumb cluster-thumb" onclick="zoomCluster(${img.cluster})" title="Cluster ${img.cluster}: ${img.emotion}">
-                <img src="${img.imageURL}" alt="${img.filename}">
-                <div class="emotion-overlay">
-                    <div style="font-size: 0.75rem; opacity: 0.7;">Cluster ${img.cluster}</div>
-                    <div>${img.emotion}</div>
-                </div>
-            </button>
-        `).join('');
-}
-
-function zoomCluster(clusterId) {
-    const galleryEl = document.getElementById('clusterGallery');
-    if (!galleryEl) return;
-
-    const clusterImages = dataset
-        .map((entry, i) => ({...entry, cluster: currentClusters[i]}))
-        .filter(entry => entry.cluster === clusterId);
-    
-    galleryEl.innerHTML = `
-        <div class="cluster-detail" style="grid-column: 1 / -1;">
-            <button onclick="showClusterView()" class="btn-ghost">← All clusters</button>
-            <h3>Cluster ${clusterId} - ${((clusterDisagreement[clusterId] || 0) * 100).toFixed(0)}% disagreement</h3>
-            <p>Visually similar objects, different reported emotions:</p>
-            <div class="emotion-breakdown">
-                ${clusterImages.slice(0, 20).map(img => 
-                    `<span class="emotion-tag">${img.emotion || 'unknown'}</span>`
-                ).join('')}
-            </div>
-        </div>
-        ${clusterImages.slice(0, 20).map(img => `
-            <button class="thumb cluster-thumb" title="${img.emotion} - ${img.filename}">
-                <img src="${img.imageURL}" alt="${img.filename}">
-                <div class="emotion-label">${img.emotion}</div>
-            </button>
-        `).join('')}
-    `;
-}
-
-// EMOTION MEMORY PALACE CONSTELLATION (Add after runClustering)
-let scene, camera, renderer, constellationGroup, stars = [];
-const emotionMap = {
-    anger: { pos: [-0.8, -0.2, 0], color: 0xff4b5c },
-    fear: { pos: [-0.6, 0.2, 0], color: 0x6b5bff },
-    disgust: { pos: [0.2, -0.8, 0], color: 0x46c37b },
-    happiness: { pos: [0.8, 0.6, 0], color: 0xffd166 },
-    sadness: { pos: [-0.3, -0.7, 0], color: 0x4d7cff },
-    surprise: { pos: [0.5, 0.3, 0], color: 0xff66c4 }
-};
-
-// Initialize 3D Constellation Scene
-function initConstellation() {
-    // Use the container defined in visualisation.html
-    const container = document.getElementById('constellationContainer') || createConstellationContainer();
-    // Ensure a canvas exists inside the container for sizing
-    let canvas = document.getElementById('constellationCanvas');
-    if (!canvas) {
-        canvas = document.createElement('canvas');
-        canvas.id = 'constellationCanvas';
-        container.appendChild(canvas);
+    // Gather features
+    const feats = [];
+    for (const item of dataset) {
+        const f = await extractImageFeaturesPCA(item.imageURL || item.imageUrl);
+        feats.push(f);
     }
-    
-    // Scene setup
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x020309);
-    
-    camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.z = 5;
-    
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    container.appendChild(renderer.domElement);
-    
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
-    scene.add(ambientLight);
-    const pointLight = new THREE.PointLight(0xffffff, 1, 100);
-    pointLight.position.set(10, 10, 10);
-    scene.add(pointLight);
-    
-    // Constellation container
-    constellationGroup = new THREE.Group();
-    scene.add(constellationGroup);
-    
-    // Background stars
-    createStarField();
-    
-    // Orbit controls
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    
-    // Animation loop
-    function animate() {
-        requestAnimationFrame(animate);
-        controls.update();
-        updateConstellation();
-        renderer.render(scene, camera);
-    }
-    animate();
-    
-    // Resize handler
-    window.addEventListener('resize', onWindowResize);
-    
-    function onWindowResize() {
-        camera.aspect = container.clientWidth / container.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(container.clientWidth, container.clientHeight);
-    }
-    
-    return container;
-}
+    if (status) status.textContent = 'Computing PCA…';
 
-// Create constellation container if it doesn't exist
-function createConstellationContainer() {
-    const container = document.createElement('div');
-    container.id = 'constellationContainer';
-    container.style.cssText = `
-        width: 100%; max-width: 1200px; height: 600px; margin: 40px auto;
-        position: relative; border-radius: 24px; overflow: hidden;
-        background: radial-gradient(circle at center, rgba(30,30,43,0.95) 0%, rgba(2,3,9,1) 100%);
-        box-shadow: 0 35px 80px rgba(0,0,0,0.5);
-    `;
-    const canvas = document.createElement('canvas');
-    canvas.id = 'constellationCanvas';
-    container.appendChild(canvas);
-    
-    // Add to DOM (after gallery)
-    const vizSection = document.querySelector('.constellation-section');
-    if (vizSection) {
-        vizSection.appendChild(container);
-    } else {
-        document.body.appendChild(container);
+    // Standardize
+    const X = feats;
+    const m = X.length, d = X[0].length;
+    const means = new Array(d).fill(0);
+    const stds = new Array(d).fill(0);
+    for (let j=0;j<d;j++) {
+        for (let i=0;i<m;i++) means[j]+=X[i][j];
+        means[j]/=m;
+        for (let i=0;i<m;i++) stds[j]+=Math.pow(X[i][j]-means[j],2);
+        stds[j]=Math.sqrt(stds[j]/m)||1;
     }
-    
-    return container;
-}
+    const Z = X.map(row=>row.map((v,j)=>(v-means[j])/stds[j]));
 
-// Create background starfield
-function createStarField() {
-    const starGeometry = new THREE.BufferGeometry();
-    const starCount = 1000;
-    const positions = new Float32Array(starCount * 3);
-    
-    for (let i = 0; i < starCount * 3; i++) {
-        positions[i] = (Math.random() - 0.5) * 200;
-    }
-    
-    starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    
-    const starMaterial = new THREE.PointsMaterial({
-        color: 0xffffff,
-        size: 2,
-        sizeAttenuation: false
-    });
-    
-    const starsField = new THREE.Points(starGeometry, starMaterial);
-    scene.add(starsField);
-}
+    // SVD via numeric.js
+    const svd = numeric.svd(Z);
+    const V = svd.V; // columns are PCs
+    // Project onto first 2 components
+    const pc1 = V.map(r=>r[0]);
+    const pc2 = V.map(r=>r[1]);
+    const Y = Z.map(row=>[
+        numeric.dot(row, pc1),
+        numeric.dot(row, pc2)
+    ]);
 
-// Update constellation based on dataset + clusters
-function updateConstellation() {
-    if (!dataset.length || !constellationGroup) return;
-    
-    // Clear existing objects
-    while (constellationGroup.children.length) {
-        constellationGroup.remove(constellationGroup.children[0]);
-    }
-    
-    // Group objects by emotion and create constellation nodes
-    Object.entries(emotionMap).forEach(([emotion, { pos, color }]) => {
-        const emotionObjects = dataset.filter(item => item.emotion === emotion);
-        
-        if (emotionObjects.length === 0) return;
-        
-        // Central emotion node (constellation center)
-        const centerGeometry = new THREE.SphereGeometry(0.1 + emotionObjects.length * 0.01, 16, 16);
-        const centerMaterial = new THREE.MeshBasicMaterial({ 
-            color, 
-            transparent: true, 
-            opacity: 0.8 
-        });
-        const centerSphere = new THREE.Mesh(centerGeometry, centerMaterial);
-        centerSphere.position.set(...pos);
-        constellationGroup.add(centerSphere);
-        
-        // Orbiting object particles
-        emotionObjects.slice(0, 8).forEach((obj, i) => { // Max 8 per emotion
-            const particle = createObjectParticle(obj.imageURL || '', color, i);
-            const angle = (i / 8) * Math.PI * 2;
-            const radius = 0.3 + i * 0.05;
-            particle.position.set(
-                pos[0] + Math.cos(angle) * radius,
-                pos[1] + Math.sin(angle) * radius * 0.5,
-                pos[2] + (Math.random() - 0.5) * 0.2
-            );
-            constellationGroup.add(particle);
-        });
-        
-        // Connecting lines (emotional gravity)
-        const lineMaterial = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.3 });
-        emotionObjects.slice(0, 4).forEach((obj, i) => {
-            const points = [
-                new THREE.Vector3(...pos),
-                new THREE.Vector3(
-                    pos[0] + Math.cos(i * Math.PI / 2) * 0.4,
-                    pos[1] + Math.sin(i * Math.PI / 2) * 0.3,
-                    pos[2]
-                )
-            ];
-            const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-            constellationGroup.add(new THREE.Line(lineGeometry, lineMaterial));
-        });
-    });
-    
-    // Animate glow
-    constellationGroup.traverse((child) => {
-        if (child.material) {
-            child.material.emissive = new THREE.Color(child.material.color).multiplyScalar(0.2 + Math.sin(Date.now() * 0.001 + child.position.x) * 0.1);
-        }
-    });
-}
+    // Scale to canvas
+    const pad = 30;
+    const W = canvas.clientWidth; const H = canvas.clientHeight;
+    canvas.width = W; canvas.height = H;
+    const xs = Y.map(p=>p[0]);
+    const ys = Y.map(p=>p[1]);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    function xScale(x){ return pad + (x-minX)/(maxX-minX||1) * (W-2*pad); }
+    function yScale(y){ return H - (pad + (y-minY)/(maxY-minY||1) * (H-2*pad)); }
 
-// Create particle representing an object
-function createObjectParticle(imageURL, color, index) {
-    const group = new THREE.Group();
-    
-    // Glowing particle
-    const particleGeometry = new THREE.SphereGeometry(0.08, 12, 12);
-    const particleMaterial = new THREE.MeshBasicMaterial({ 
-        color, 
-        transparent: true, 
-        opacity: 0.9 
-    });
-    const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-    
-    // Glow effect
-    const glowGeometry = new THREE.SphereGeometry(0.12, 12, 12);
-    const glowMaterial = new THREE.MeshBasicMaterial({ 
-        color, 
-        transparent: true, 
-        opacity: 0.3 
-    });
-    const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-    
-    group.add(particle, glow);
-    
-    // Hover effect
-    group.userData.originalScale = 1;
-    group.onHover = () => {
-        group.scale.set(1.5, 1.5, 1.5);
+    // Colors by emotion
+    const colorMap = { 
+        anger: '#ff4b5c', disgust: '#46c37b', fear: '#6b5bff',
+        happiness: '#ffd166', sadness: '#4d7cff', surprise: '#ff66c4'
     };
-    group.onHoverOut = () => {
-        group.scale.set(1, 1, 1);
-    };
-    
-    return group;
-}
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.fillRect(0,0,W,H);
+    ctx.font = '12px Inter, system-ui, sans-serif';
 
-// Load Three.js and OrbitControls (add to index.html)
-function loadThreeJS() {
-    return new Promise((resolve) => {
-        if (window.THREE) {
-            resolve();
-            return;
+    // Draw points
+    const radius = 6;
+    dataset.forEach((item, i)=>{
+        const [x,y] = Y[i];
+        const cx = xScale(x), cy = yScale(y);
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI*2);
+        ctx.fillStyle = colorMap[item.emotion] || '#a0a8c4';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+    });
+
+    // Axes labels
+    ctx.fillStyle = '#a0a8c4';
+    ctx.fillText('PC1', W - pad - 20, H - 10);
+    ctx.save();
+    ctx.translate(10, pad + 20);
+    ctx.rotate(-Math.PI/2);
+    ctx.fillText('PC2', 0, 0);
+    ctx.restore();
+
+    // Legend
+    const emotionsSet = Array.from(new Set(dataset.map(d=>d.emotion)));
+    legend.innerHTML = emotionsSet.map(e=>`<span style="display:inline-flex;align-items:center;gap:6px;">
+        <span style="width:10px;height:10px;border-radius:50%;background:${colorMap[e]||'#a0a8c4'};display:inline-block;"></span>
+        ${e}
+    </span>`).join('');
+    if (status) status.textContent = `PCA ready • ${dataset.length} objects`;
+
+    // Simple hover tooltip
+    const tooltip = document.createElement('div');
+    tooltip.style.cssText = 'position:fixed;pointer-events:none;background:rgba(10,14,25,0.9);color:#fff;padding:8px 10px;border-radius:8px;font-size:12px;border:1px solid rgba(255,255,255,0.12);display:none;z-index:1000;';
+    document.body.appendChild(tooltip);
+    canvas.onmousemove = (ev)=>{
+        const rect = canvas.getBoundingClientRect();
+        const mx = ev.clientX - rect.left; const my = ev.clientY - rect.top;
+        let found = -1;
+        for (let i=0;i<dataset.length;i++){
+            const [x,y] = Y[i];
+            const cx = xScale(x), cy = yScale(y);
+            const dx = mx - cx, dy = my - cy;
+            if (dx*dx + dy*dy <= (radius+3)*(radius+3)) { found = i; break; }
         }
-        
-        const script1 = document.createElement('script');
-        script1.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-        script1.onload = () => {
-            const script2 = document.createElement('script');
-            script2.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
-            script2.onload = resolve;
-            document.head.appendChild(script2);
-        };
-        document.head.appendChild(script1);
-    });
-}
+        if (found>=0){
+            tooltip.style.display = 'block';
+            tooltip.style.left = (ev.clientX+12)+"px";
+            tooltip.style.top = (ev.clientY+12)+"px";
+            const d = dataset[found];
+            tooltip.innerHTML = `<div style="opacity:.7">${d.filename||'object'}</div><div style="font-weight:600">${d.emotion||'unknown'}</div>`;
+        } else {
+            tooltip.style.display = 'none';
+        }
+    };
 
-async function initMemoryPalace() {
-    await loadThreeJS();
-    const container = initConstellation();
-    
-    // Auto-update when dataset changes
-    const observer = new MutationObserver(() => {
-        if (dataset.length > 0) updateConstellation();
-    });
-    
-    observer.observe(document.body, { childList: true, subtree: true });
-}
+    // Render dataset export lists if present
+    try { renderDatasetLists(); } catch (_) {}
 
-// Call after clustering
-if (window.location.pathname.includes('visualisation.html')) {
-    // Replace/add this in your runClustering success callback:
-    initMemoryPalace().then(() => {
-        updateConstellation();
-    });
 }
 

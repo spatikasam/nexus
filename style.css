@@ -547,74 +547,8 @@ body {
     text-transform: capitalize;
 }
 
-/* CLUSTER VISUALIZATION */
-.viz-page .cluster-section { margin-top: 40px; }
-
-.cluster-stats {
-    text-align: center; margin-bottom: 48px;
-}
-
-.cluster-previews {
-    display: flex; gap: 24px; justify-content: center;
-    flex-wrap: wrap; margin-top: 32px;
-}
-
-.cluster-preview {
-    padding: 24px 20px; border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 16px; cursor: pointer; text-align: center;
-    min-width: 140px; transition: all 0.3s ease;
-    background: rgba(255,255,255,0.05);
-}
-
-.cluster-preview:hover {
-    background: rgba(255,255,255,0.12);
-    border-color: rgba(255,255,255,0.4);
-    transform: translateY(-4px);
-}
-
-.cluster-glow {
-    width: 60px; height: 60px; border-radius: 50%;
-    margin: 0 auto 16px; border: 2px solid rgba(255,255,255,0.3);
-}
-
-.cluster-score {
-    font-size: 0.85rem; color: #ffd166; font-weight: 600;
-    margin-top: 4px;
-}
-
-.cluster-detail {
-    grid-column: 1 / -1; text-align: center; padding: 32px;
-    background: rgba(255,255,255,0.08); border-radius: 20px;
-    margin-bottom: 32px; backdrop-filter: blur(20px);
-}
-
-.emotion-breakdown {
-    display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
-    margin: 24px 0;
-}
-
-.emotion-tag {
-    padding: 8px 16px; background: rgba(255,255,255,0.2);
-    border-radius: 20px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.4);
-    font-weight: 500;
-}
-
-.cluster-thumb .emotion-label {
-    position: absolute; bottom: 12px; left: 12px; right: 12px;
-    background: rgba(0,0,0,0.85); color: white;
-    padding: 6px 10px; border-radius: 8px; font-size: 0.75rem;
-    text-align: center; font-weight: 500;
-}
-
-.constellation-section { 
-    margin-top: 80px; text-align: center; 
-}
-.constellation-section h2 { 
-    font-size: 2rem; color: #f4f6ff; 
-}
-#constellationContainer {
-    max-width: 1200px; margin: 0 auto;
-}
+/* VISUALISATION LAYOUT */
+.viz-page .viz-section { margin-top: 40px; }
 
 /* RESPONSIVE */
 @media (max-width: 768px) {
