@@ -21,23 +21,32 @@
 </head>
 <body class="viz-page">
     <main class="page">
-        <header class="hero" style="grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 40px;">
-            <div>
-                <div class="section-label small">PCA MAP</div>
-                <h1 style="margin: 8px 0 12px; font-size: 2rem; font-weight: 500; color: #f4f6ff;">NEXUS Data Visualisation</h1>
-                <p class="hero-lede">A classical machine learning method, Principal Component Analysis (PCA), reduces the visual features of each image—RGB mean and standard deviation, brightness, and saturation—into a 2D map. Objects that look visually similar cluster together. Each point is coloured by the emotion it evokes. Nearby objects look similar to the machine, but humans feel very different emotions. Click any thumbnail to explore.</p>
-                <div class="status-section" style="margin-top: 16px;">
-                    <div class="status-pill" id="mlStatus">Waiting for data…</div>
-                    <div class="utility-controls">
-                        <button class="btn-ghost" onclick="runPCAMap()">Re‑run PCA</button>
-                    </div>
-                </div>
+        <header style="margin-bottom: 48px;">
+            <div style="max-width: 900px;">
+                <div class="section-label small">VISUALIZATION</div>
+                <h1 style="margin: 12px 0 24px; font-size: 2.2rem; font-weight: 500; color: #f4f6ff; line-height: 1.3;">NEXUS Data Visualisation</h1>
+                <p style="font-size: 1rem; line-height: 1.7; color: #c4caea; margin: 0;">
+                    A machine learning algorithm (PCA) maps images by their visual features—color, brightness, saturation. 
+                    Objects that <em>look</em> similar appear near each other. 
+                    Each point's color shows the <em>emotion</em> it evokes. 
+                    Watch how visual similarity and human feeling diverge across the map.
+                </p>
             </div>
         </header>
 
         <section class="viz-section" style="margin-top: 0;">
-            <canvas id="pcaCanvas" style="width:100%; max-width: 1200px; height: 600px; border-radius: 16px; display:block; margin: 0 auto; background: linear-gradient(180deg, #0a0f1f 0%, #0a0a14 100%);"></canvas>
-            <div id="pcaLegend" style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:12px; color:#a0a8c4;"></div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 32px;">
+                <canvas id="pcaCanvas" style="width:100%; max-width: 1000px; height: 580px; border-radius: 16px; display:block; background: linear-gradient(180deg, #0a0f1f 0%, #0a0a14 100%); border: 1px solid rgba(255,255,255,0.1);"></canvas>
+                <div id="pcaLegend" style="display:flex; gap:16px; flex-wrap:wrap; justify-content:center; color:#a0a8c4; padding: 0 20px;"></div>
+            </div>
+        </section>
+
+        <section style="margin-top: 48px; padding-top: 32px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap;">
+                <div class="status-pill" id="mlStatus" style="margin: 0;">Waiting for data…</div>
+                <button class="btn-ghost" onclick="runPCAMap()" style="margin: 0;">Re‑run PCA</button>
+                <a href="index.html" class="btn-ghost" style="text-decoration: none; margin: 0;">← Back to Upload</a>
+            </div>
         </section>
 
     </main>
