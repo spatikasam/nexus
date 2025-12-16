@@ -485,6 +485,22 @@ function copyDatasetLists() {
 }
 
 // ===== PCA VISUALISATION =====
+const pcaState = { scale: 1, tx: 0, ty: 0, basePoints: [], screenPoints: [], images: [] };
+
+function loadImageSafe(url) {
+    return new Promise((resolve) => {
+        if (!url) {
+            resolve(null);
+            return;
+        }
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = url;
+    });
+}
+
 async function extractImageFeaturesPCA(imageURL) {
     return new Promise((resolve) => {
         const img = new Image();
@@ -591,33 +607,143 @@ async function runPCAMap() {
         anger: '#ff4b5c', disgust: '#46c37b', fear: '#6b5bff',
         happiness: '#ffd166', sadness: '#4d7cff', surprise: '#ff66c4'
     };
-    ctx.clearRect(0,0,W,H);
-    ctx.fillStyle = 'rgba(255,255,255,0.08)';
-    ctx.fillRect(0,0,W,H);
-    ctx.font = '12px Inter, system-ui, sans-serif';
 
-    // Draw points
-    const radius = 6;
-    dataset.forEach((item, i)=>{
-        const [x,y] = Y[i];
-        const cx = xScale(x), cy = yScale(y);
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0, Math.PI*2);
-        ctx.fillStyle = colorMap[item.emotion] || '#a0a8c4';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-        ctx.lineWidth = 1.2;
-        ctx.stroke();
-    });
+    // Cache base positions (no pan/zoom yet)
+    pcaState.basePoints = Y.map(([x,y]) => ({ x: xScale(x), y: yScale(y) }));
+    pcaState.scale = 1; pcaState.tx = 0; pcaState.ty = 0;
 
-    // Axes labels
-    ctx.fillStyle = '#a0a8c4';
-    ctx.fillText('PC1', W - pad - 20, H - 10);
-    ctx.save();
-    ctx.translate(10, pad + 20);
-    ctx.rotate(-Math.PI/2);
-    ctx.fillText('PC2', 0, 0);
-    ctx.restore();
+    // Load thumbnails
+    if (status) status.textContent = 'Loading thumbnails…';
+    pcaState.images = await Promise.all(dataset.map(d => loadImageSafe(d.imageURL || d.imageUrl)));
+
+    // Tooltip element (one per page)
+    let tooltip = document.getElementById('pcaTooltip');
+    if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'pcaTooltip';
+        tooltip.style.cssText = 'position:fixed;pointer-events:none;background:rgba(10,14,25,0.9);color:#fff;padding:8px 10px;border-radius:8px;font-size:12px;border:1px solid rgba(255,255,255,0.12);display:none;z-index:1000;';
+        document.body.appendChild(tooltip);
+    }
+
+    function drawPCA() {
+        const { scale, tx, ty, basePoints, images } = pcaState;
+        ctx.clearRect(0,0,W,H);
+        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        ctx.fillRect(0,0,W,H);
+        ctx.font = '12px Inter, system-ui, sans-serif';
+
+        // Compute screen points with current transform
+        const screenPts = basePoints.map(p => ({ x: p.x * scale + tx, y: p.y * scale + ty }));
+        pcaState.screenPoints = screenPts;
+
+        // Draw thumbnails (fallback to colored dots)
+        const thumbSize = 38;
+        screenPts.forEach((pt, i) => {
+            const img = images[i];
+            if (img) {
+                const half = thumbSize / 2;
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, half, 0, Math.PI * 2);
+                ctx.clip();
+                ctx.drawImage(img, pt.x - half, pt.y - half, thumbSize, thumbSize);
+                ctx.restore();
+                ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, half, 0, Math.PI * 2);
+                ctx.stroke();
+            } else {
+                const radius = 10;
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = colorMap[dataset[i].emotion] || '#a0a8c4';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+            }
+        });
+
+        // Axes labels
+        ctx.fillStyle = '#a0a8c4';
+        ctx.fillText('PC1', W - pad - 20, H - 10);
+        ctx.save();
+        ctx.translate(10, pad + 20);
+        ctx.rotate(-Math.PI/2);
+        ctx.fillText('PC2', 0, 0);
+        ctx.restore();
+    }
+
+    function findHit(mx, my) {
+        const screenPts = pcaState.screenPoints || [];
+        const hitRadius = 22;
+        for (let i = screenPts.length - 1; i >= 0; i--) {
+            const pt = screenPts[i];
+            const dx = mx - pt.x; const dy = my - pt.y;
+            if (dx*dx + dy*dy <= hitRadius*hitRadius) return i;
+        }
+        return -1;
+    }
+
+    function handleHover(ev) {
+        const rect = canvas.getBoundingClientRect();
+        const mx = ev.clientX - rect.left;
+        const my = ev.clientY - rect.top;
+        const hit = findHit(mx, my);
+        if (hit >= 0) {
+            const d = dataset[hit];
+            tooltip.style.display = 'block';
+            tooltip.style.left = (ev.clientX + 12) + 'px';
+            tooltip.style.top = (ev.clientY + 12) + 'px';
+            tooltip.innerHTML = `<div style="opacity:.7">${d.filename||'object'}</div><div style="font-weight:600">${d.emotion||'unknown'}</div>`;
+        } else {
+            tooltip.style.display = 'none';
+        }
+    }
+
+    // Pan + zoom state
+    let isPanning = false;
+    let lastX = 0, lastY = 0;
+
+    canvas.onwheel = (ev) => {
+        ev.preventDefault();
+        const { scale, tx, ty } = pcaState;
+        const factor = ev.deltaY < 0 ? 1.1 : 0.9;
+        const newScale = Math.max(0.5, Math.min(8, scale * factor));
+        const rect = canvas.getBoundingClientRect();
+        const mx = ev.clientX - rect.left;
+        const my = ev.clientY - rect.top;
+        const worldX = (mx - tx) / scale;
+        const worldY = (my - ty) / scale;
+        pcaState.tx = mx - worldX * newScale;
+        pcaState.ty = my - worldY * newScale;
+        pcaState.scale = newScale;
+        drawPCA();
+        handleHover(ev);
+    };
+
+    canvas.onmousedown = (ev) => {
+        isPanning = true;
+        lastX = ev.clientX; lastY = ev.clientY;
+        canvas.style.cursor = 'grabbing';
+    };
+    window.onmouseup = () => { isPanning = false; canvas.style.cursor = 'default'; };
+    window.onmousemove = (ev) => {
+        if (isPanning) {
+            const dx = ev.clientX - lastX;
+            const dy = ev.clientY - lastY;
+            lastX = ev.clientX; lastY = ev.clientY;
+            pcaState.tx += dx;
+            pcaState.ty += dy;
+            drawPCA();
+            return;
+        }
+        handleHover(ev);
+    };
+
+    // Draw initial view
+    drawPCA();
 
     // Legend
     const emotionsSet = Array.from(new Set(dataset.map(d=>d.emotion)));
@@ -626,34 +752,6 @@ async function runPCAMap() {
         ${e}
     </span>`).join('');
     if (status) status.textContent = `PCA ready • ${dataset.length} objects`;
-
-    // Simple hover tooltip
-    const tooltip = document.createElement('div');
-    tooltip.style.cssText = 'position:fixed;pointer-events:none;background:rgba(10,14,25,0.9);color:#fff;padding:8px 10px;border-radius:8px;font-size:12px;border:1px solid rgba(255,255,255,0.12);display:none;z-index:1000;';
-    document.body.appendChild(tooltip);
-    canvas.onmousemove = (ev)=>{
-        const rect = canvas.getBoundingClientRect();
-        const mx = ev.clientX - rect.left; const my = ev.clientY - rect.top;
-        let found = -1;
-        for (let i=0;i<dataset.length;i++){
-            const [x,y] = Y[i];
-            const cx = xScale(x), cy = yScale(y);
-            const dx = mx - cx, dy = my - cy;
-            if (dx*dx + dy*dy <= (radius+3)*(radius+3)) { found = i; break; }
-        }
-        if (found>=0){
-            tooltip.style.display = 'block';
-            tooltip.style.left = (ev.clientX+12)+"px";
-            tooltip.style.top = (ev.clientY+12)+"px";
-            const d = dataset[found];
-            tooltip.innerHTML = `<div style="opacity:.7">${d.filename||'object'}</div><div style="font-weight:600">${d.emotion||'unknown'}</div>`;
-        } else {
-            tooltip.style.display = 'none';
-        }
-    };
-
-    // Render dataset export lists if present
-    try { renderDatasetLists(); } catch (_) {}
 
 }
 
