@@ -39,6 +39,7 @@
                     <div class="utility-controls">
                         <a href="index.html" class="btn-ghost">← Back to upload</a>
                         <button class="btn-ghost" onclick="runClustering()">Re‑run analysis</button>
+                        <button class="btn-ghost" onclick="renderDatasetLists()">Show dataset lists</button>
                     </div>
                 </div>
             </div>
@@ -56,6 +57,18 @@
         <!-- CLUSTER GALLERY GRID -->
         <section class="cluster-section">
             <div id="clusterGallery" class="gallery" style="margin-top: 0;"></div>
+        </section>
+
+        <!-- Dataset Lists Export -->
+        <section class="dataset-lists-section" style="margin-top: 24px;">
+            <div class="section-label small">DATA EXPORT</div>
+            <p style="color:#a0a8c4; max-width:600px;">Quick arrays for use elsewhere. Refresh after new uploads.</p>
+            <div style="display:flex; gap:8px; flex-wrap: wrap; margin: 8px 0 12px;">
+                <button class="btn-ghost" onclick="renderDatasetLists()">Refresh lists</button>
+                <button class="btn-ghost" onclick="copyDatasetLists()">Copy to clipboard</button>
+            </div>
+            <pre id="datasetLists" style="display:none; background:#0c0f1a; color:#d7e1ff; padding:16px; border-radius:12px; overflow:auto;"></pre>
+            <div id="datasetListsEmpty" style="color:#a0a8c4;"></div>
         </section>
 
         <!-- Emotion Memory Palace -->

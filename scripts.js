@@ -437,6 +437,56 @@ function downloadDataset() {
     URL.revokeObjectURL(url);
 }
 
+// DATASET LISTS (filenames + emotions)
+function getFilenameFromEntry(entry) {
+    if (entry.filename) return entry.filename;
+    if (entry.imageURL) {
+        try {
+            const u = new URL(entry.imageURL);
+            const base = u.pathname.split('/').pop() || '';
+            return base.split('?')[0];
+        } catch {
+            // Not a valid URL, return as-is
+            return entry.imageURL;
+        }
+    }
+    if (entry.imageUrl) return entry.imageUrl;
+    return '';
+}
+
+function renderDatasetLists() {
+    const pre = document.getElementById('datasetLists');
+    const empty = document.getElementById('datasetListsEmpty');
+    if (!pre || !empty) return;
+
+    if (!dataset || dataset.length === 0) {
+        pre.style.display = 'none';
+        empty.textContent = 'No dataset loaded yet.';
+        return;
+    }
+
+    const filenames = dataset.map(getFilenameFromEntry).filter(Boolean);
+    const emotionsPresent = Array.from(new Set(dataset.map(d => d.emotion).filter(Boolean))).sort();
+
+    const code = `FIREBASE_FILENAMES = [\n  ${filenames.map(f => JSON.stringify(f)).join(',\n  ')}\n]\n\nEMOTIONS = [ ${emotionsPresent.map(e => JSON.stringify(e)).join(', ')} ]\n`;
+
+    pre.textContent = code;
+    pre.style.display = 'block';
+    empty.textContent = '';
+}
+
+function copyDatasetLists() {
+    const pre = document.getElementById('datasetLists');
+    if (!pre || !pre.textContent) return;
+    navigator.clipboard.writeText(pre.textContent).then(() => {
+        const mlStatus = document.getElementById('mlStatus');
+        if (mlStatus) {
+            mlStatus.textContent = 'Copied dataset lists to clipboard';
+            setTimeout(() => (mlStatus.textContent = `Clustered ${dataset.length} objects`), 2000);
+        }
+    }).catch(() => {});
+}
+
 // PYODIDE CLUSTERING (for visualisation.html)
 async function initPyodide() {
     if (pyodide) return pyodide;
