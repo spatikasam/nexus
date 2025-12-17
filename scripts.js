@@ -687,8 +687,8 @@ async function runPCAMap() {
                 ctx.clip();
                 ctx.drawImage(img, pt.x - half, pt.y - half, thumbSize, thumbSize);
                 
-                // Add emotion color tint overlay (20% opacity)
-                ctx.fillStyle = emotionColor + '33'; // 33 = 20% opacity in hex
+                // Add emotion color tint overlay (35% opacity)
+                ctx.fillStyle = emotionColor + '59'; // 59 = 35% opacity in hex
                 ctx.fillRect(pt.x - half, pt.y - half, thumbSize, thumbSize);
                 
                 ctx.restore();
