@@ -414,11 +414,19 @@ function updateGallery() {
     if (!gallery) return;
     
     gallery.innerHTML = dataset.map(entry => 
-        `<button class="thumb" title="${entry.emotion || 'unknown'} - ${entry.filename || 'demo'}">
+        `<button class="thumb" title="${entry.emotion || 'unknown'}">
             <img src="${entry.imageURL || 'https://picsum.photos/seed/nexus/110/110'}" alt="${entry.filename || 'object'}">
             <div class="emotion-overlay">${entry.emotion || 'unknown'}</div>
         </button>`
     ).join('');
+
+    // Enable gallery modal (same modal used on visualisation)
+    const thumbs = gallery.querySelectorAll('.thumb');
+    thumbs.forEach((btn, idx) => {
+        const item = dataset[idx];
+        if (!item) return;
+        btn.onclick = () => showImageModal(item.imageURL, item.filename, item.emotion || 'unknown');
+    });
     
     if (galleryDesc) {
         galleryDesc.textContent = `${dataset.length} ${dataset.length === 1 ? 'object' : 'objects'} in the dataset.`;
